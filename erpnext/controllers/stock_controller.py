@@ -184,6 +184,7 @@ class StockController(AccountsController):
 
 	def get_items_and_warehouses(self) -> Tuple[List[str], List[str]]:
 		"""Get list of items and warehouses affected by a transaction"""
+<<<<<<< HEAD
 
 		if not (hasattr(self, "items") or hasattr(self, "packed_items")):
 			return [], []
@@ -203,6 +204,27 @@ class StockController(AccountsController):
 				if d.get("t_warehouse"):
 					warehouses.add(d.t_warehouse)
 
+=======
+
+		if not (hasattr(self, "items") or hasattr(self, "packed_items")):
+			return [], []
+
+		item_rows = (self.get("items") or []) + (self.get("packed_items") or [])
+
+		items = {d.item_code for d in item_rows if d.item_code}
+
+		warehouses = set()
+		for d in item_rows:
+			if d.get("warehouse"):
+				warehouses.add(d.warehouse)
+
+			if self.doctype == "Stock Entry":
+				if d.get("s_warehouse"):
+					warehouses.add(d.s_warehouse)
+				if d.get("t_warehouse"):
+					warehouses.add(d.t_warehouse)
+
+>>>>>>> version-13
 		return list(items), list(warehouses)
 
 	def get_stock_ledger_details(self):
@@ -507,12 +529,40 @@ class StockController(AccountsController):
 			"voucher_no": self.name,
 			"company": self.company
 		})
-		if future_sle_exists(args):
+
+		if future_sle_exists(args) or repost_required_for_queue(self):
 			item_based_reposting =  cint(frappe.db.get_single_value("Stock Reposting Settings", "item_based_reposting"))
 			if item_based_reposting:
 				create_item_wise_repost_entries(voucher_type=self.doctype, voucher_no=self.name)
 			else:
 				create_repost_item_valuation_entry(args)
+
+def repost_required_for_queue(doc: StockController) -> bool:
+	"""check if stock document contains repeated item-warehouse with queue based valuation.
+
+	if queue exists for repeated items then SLEs need to reprocessed in background again.
+	"""
+
+	consuming_sles = frappe.db.get_all("Stock Ledger Entry",
+		filters={
+			"voucher_type": doc.doctype,
+			"voucher_no": doc.name,
+			"actual_qty": ("<", 0),
+			"is_cancelled": 0
+		},
+		fields=["item_code", "warehouse", "stock_queue"]
+	)
+	item_warehouses = [(sle.item_code, sle.warehouse) for sle in consuming_sles]
+
+	unique_item_warehouses = set(item_warehouses)
+
+	if len(unique_item_warehouses) == len(item_warehouses):
+		return False
+
+	for sle in consuming_sles:
+		if sle.stock_queue != "[]":  # using FIFO/LIFO valuation
+			return True
+	return False
 
 
 @frappe.whitelist()

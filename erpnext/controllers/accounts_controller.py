@@ -1567,13 +1567,12 @@ def validate_taxes_and_charges(tax):
 		tax.rate = None
 
 
-def validate_account_head(tax, doc):
-	company = frappe.get_cached_value('Account',
-		tax.account_head, 'company')
+def validate_account_head(idx, account, company):
+	account_company = frappe.get_cached_value('Account', account, 'company')
 
-	if company != doc.company:
+	if account_company != company:
 		frappe.throw(_('Row {0}: Account {1} does not belong to Company {2}')
-			.format(tax.idx, frappe.bold(tax.account_head), frappe.bold(doc.company)), title=_('Invalid Account'))
+			.format(idx, frappe.bold(account), frappe.bold(company)), title=_('Invalid Account'))
 
 
 def validate_cost_center(tax, doc):
@@ -1719,6 +1718,7 @@ def update_invoice_status():
 			frappe.qb.terms.Case()
 			.when(consider_base_amount, payment_schedule.base_payment_amount)
 			.else_(payment_schedule.payment_amount)
+<<<<<<< HEAD
 		)
 
 		payable_amount = (
@@ -1770,6 +1770,59 @@ def update_invoice_status():
 			.else_("Overdue")
 		)
 
+=======
+		)
+
+		payable_amount = (
+			frappe.qb.from_(payment_schedule)
+			.select(Sum(payment_amount))
+			.where(
+				(payment_schedule.parent == invoice.name)
+				& (payment_schedule.due_date < today)
+			)
+		)
+
+		total = (
+			frappe.qb.terms.Case()
+			.when(invoice.disable_rounded_total, invoice.grand_total)
+			.else_(invoice.rounded_total)
+		)
+
+		base_total = (
+			frappe.qb.terms.Case()
+			.when(invoice.disable_rounded_total, invoice.base_grand_total)
+			.else_(invoice.base_rounded_total)
+		)
+
+		total_amount = (
+			frappe.qb.terms.Case()
+			.when(consider_base_amount, base_total)
+			.else_(total)
+		)
+
+		is_overdue = total_amount - invoice.outstanding_amount < payable_amount
+
+		conditions = (
+			(invoice.docstatus == 1)
+			& (invoice.outstanding_amount > 0)
+			& (
+				invoice.status.like("Unpaid%")
+				| invoice.status.like("Partly Paid%")
+			)
+			& (
+				((invoice.is_pos & invoice.due_date < today) | is_overdue)
+				if doctype == "Sales Invoice"
+				else is_overdue
+			)
+		)
+
+		status = (
+			frappe.qb.terms.Case()
+			.when(invoice.status.like("%Discounted"), "Overdue and Discounted")
+			.else_("Overdue")
+		)
+
+>>>>>>> version-13
 		frappe.qb.update(invoice).set("status", status).where(conditions).run()
 
 

@@ -9,6 +9,7 @@ from erpnext.manufacturing.doctype.production_plan.production_plan import (
 	get_sales_orders,
 	get_warehouse_list,
 )
+from erpnext.manufacturing.doctype.work_order.work_order import OverProductionError
 from erpnext.selling.doctype.sales_order.test_sales_order import make_sales_order
 from erpnext.stock.doctype.item.test_item import create_item
 from erpnext.stock.doctype.stock_entry.test_stock_entry import make_stock_entry
@@ -409,9 +410,12 @@ class TestProductionPlan(ERPNextTestCase):
 		boms = {
 			"Assembly": {
 				"SubAssembly1": {"ChildPart1": {}, "ChildPart2": {},},
+<<<<<<< HEAD
 				"SubAssembly2": {"ChildPart3": {}},
 				"SubAssembly3": {"SubSubAssy1": {"ChildPart4": {}}},
 				"ChildPart5": {},
+=======
+>>>>>>> version-13
 				"ChildPart6": {},
 				"SubAssembly4": {"SubSubAssy2": {"ChildPart7": {}}},
 			},
@@ -469,11 +473,16 @@ class TestProductionPlan(ERPNextTestCase):
 		bom = make_bom(item=item, raw_materials=raw_materials)
 
 		# Create Production Plan
+<<<<<<< HEAD
 		pln = create_production_plan(item_code=bom.item, planned_qty=10)
+=======
+		pln = create_production_plan(item_code=bom.item, planned_qty=5)
+>>>>>>> version-13
 
 		# All the created Work Orders
 		wo_list = []
 
+<<<<<<< HEAD
 		# Create and Submit 1st Work Order for 5 qty
 		create_work_order(item, pln, 5)
 		pln.reload()
@@ -483,12 +492,30 @@ class TestProductionPlan(ERPNextTestCase):
 		create_work_order(item, pln, 3)
 		pln.reload()
 		self.assertEqual(pln.po_items[0].ordered_qty, 8)
+=======
+		# Create and Submit 1st Work Order for 3 qty
+		create_work_order(item, pln, 3)
+		pln.reload()
+		self.assertEqual(pln.po_items[0].ordered_qty, 3)
+
+		# Create and Submit 2nd Work Order for 2 qty
+		create_work_order(item, pln, 2)
+		pln.reload()
+		self.assertEqual(pln.po_items[0].ordered_qty, 5)
+
+		# Overproduction
+		self.assertRaises(OverProductionError, create_work_order, item=item, pln=pln, qty=2)
+>>>>>>> version-13
 
 		# Cancel 1st Work Order
 		wo1 = frappe.get_doc("Work Order", wo_list[0])
 		wo1.cancel()
 		pln.reload()
+<<<<<<< HEAD
 		self.assertEqual(pln.po_items[0].ordered_qty, 3)
+=======
+		self.assertEqual(pln.po_items[0].ordered_qty, 2)
+>>>>>>> version-13
 
 		# Cancel 2nd Work Order
 		wo2 = frappe.get_doc("Work Order", wo_list[1])
@@ -591,6 +618,23 @@ class TestProductionPlan(ERPNextTestCase):
 		pln.reload()
 		self.assertEqual(pln.po_items[0].pending_qty, 1)
 
+<<<<<<< HEAD
+=======
+	def test_qty_based_status(self):
+		pp = frappe.new_doc("Production Plan")
+		pp.po_items = [
+			frappe._dict(planned_qty=5, produce_qty=4)
+		]
+		self.assertFalse(pp.all_items_completed())
+
+		pp.po_items = [
+			frappe._dict(planned_qty=5, produce_qty=10),
+			frappe._dict(planned_qty=5, produce_qty=4)
+		]
+		self.assertFalse(pp.all_items_completed())
+
+
+>>>>>>> version-13
 def create_production_plan(**args):
 	"""
 	sales_order (obj): Sales Order Doc Object

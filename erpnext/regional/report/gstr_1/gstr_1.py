@@ -254,7 +254,8 @@ class Gstr1Report(object):
 		for opts in (("company", " and company=%(company)s"),
 			("from_date", " and posting_date>=%(from_date)s"),
 			("to_date", " and posting_date<=%(to_date)s"),
-			("company_address", " and company_address=%(company_address)s")):
+			("company_address", " and company_address=%(company_address)s"),
+			("company_gstin", " and company_gstin=%(company_gstin)s")):
 				if self.filters.get(opts[0]):
 					conditions += opts[1]
 
@@ -1105,12 +1106,21 @@ def get_exempted_json(data):
 
 		if data[i].get('exempted'):
 			out['inv'][i]['expt_amt'] = data[i]['exempted']
+<<<<<<< HEAD
 
 		if data[i].get('non_gst'):
 			out['inv'][i]['ngsup_amt'] = data[i]['non_gst']
 
 	return out
 
+=======
+
+		if data[i].get('non_gst'):
+			out['inv'][i]['ngsup_amt'] = data[i]['non_gst']
+
+	return out
+
+>>>>>>> version-13
 def get_invoice_type(row):
 	gst_category = row.get('gst_category')
 
@@ -1193,3 +1203,26 @@ def is_inter_state(invoice_detail):
 		return True
 	else:
 		return False
+<<<<<<< HEAD
+=======
+
+
+@frappe.whitelist()
+def get_company_gstins(company):
+	address = frappe.qb.DocType("Address")
+	links = frappe.qb.DocType("Dynamic Link")
+
+	addresses = frappe.qb.from_(address).inner_join(links).on(
+		address.name == links.parent
+	).select(
+		address.gstin
+	).where(
+		links.link_doctype == 'Company'
+	).where(
+		links.link_name == company
+	).run(as_dict=1)
+
+	address_list = [''] + [d.gstin for d in addresses]
+
+	return address_list
+>>>>>>> version-13
