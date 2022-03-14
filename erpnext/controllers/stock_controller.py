@@ -184,7 +184,6 @@ class StockController(AccountsController):
 
 	def get_items_and_warehouses(self) -> Tuple[List[str], List[str]]:
 		"""Get list of items and warehouses affected by a transaction"""
-<<<<<<< HEAD
 
 		if not (hasattr(self, "items") or hasattr(self, "packed_items")):
 			return [], []
@@ -204,27 +203,6 @@ class StockController(AccountsController):
 				if d.get("t_warehouse"):
 					warehouses.add(d.t_warehouse)
 
-=======
-
-		if not (hasattr(self, "items") or hasattr(self, "packed_items")):
-			return [], []
-
-		item_rows = (self.get("items") or []) + (self.get("packed_items") or [])
-
-		items = {d.item_code for d in item_rows if d.item_code}
-
-		warehouses = set()
-		for d in item_rows:
-			if d.get("warehouse"):
-				warehouses.add(d.warehouse)
-
-			if self.doctype == "Stock Entry":
-				if d.get("s_warehouse"):
-					warehouses.add(d.s_warehouse)
-				if d.get("t_warehouse"):
-					warehouses.add(d.t_warehouse)
-
->>>>>>> version-13
 		return list(items), list(warehouses)
 
 	def get_stock_ledger_details(self):

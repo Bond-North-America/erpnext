@@ -1106,21 +1106,12 @@ def get_exempted_json(data):
 
 		if data[i].get('exempted'):
 			out['inv'][i]['expt_amt'] = data[i]['exempted']
-<<<<<<< HEAD
 
 		if data[i].get('non_gst'):
 			out['inv'][i]['ngsup_amt'] = data[i]['non_gst']
 
 	return out
 
-=======
-
-		if data[i].get('non_gst'):
-			out['inv'][i]['ngsup_amt'] = data[i]['non_gst']
-
-	return out
-
->>>>>>> version-13
 def get_invoice_type(row):
 	gst_category = row.get('gst_category')
 
@@ -1203,8 +1194,6 @@ def is_inter_state(invoice_detail):
 		return True
 	else:
 		return False
-<<<<<<< HEAD
-=======
 
 
 @frappe.whitelist()
@@ -1225,4 +1214,3 @@ def get_company_gstins(company):
 	address_list = [''] + [d.gstin for d in addresses]
 
 	return address_list
->>>>>>> version-13

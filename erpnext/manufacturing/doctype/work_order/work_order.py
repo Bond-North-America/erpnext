@@ -632,8 +632,6 @@ class WorkOrder(Document):
 		if not self.qty > 0:
 			frappe.throw(_("Quantity to Manufacture must be greater than 0."))
 
-<<<<<<< HEAD
-=======
 		if self.production_plan and self.production_plan_item:
 			qty_dict = frappe.db.get_value("Production Plan Item", self.production_plan_item, ["planned_qty", "ordered_qty"], as_dict=1)
 
@@ -649,7 +647,6 @@ class WorkOrder(Document):
 				frappe.throw(_("Cannot produce more than {0} items for {1}")
 				.format(max_qty, self.production_item), OverProductionError)
 
->>>>>>> version-13
 	def validate_transfer_against(self):
 		if not self.docstatus == 1:
 			# let user configure operations until they're ready to submit

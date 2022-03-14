@@ -2265,15 +2265,6 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 	},
 
 	coupon_code: function() {
-<<<<<<< HEAD
-		var me = this;
-		frappe.run_serially([
-			() => this.frm.doc.ignore_pricing_rule=1,
-			() => me.ignore_pricing_rule(),
-			() => this.frm.doc.ignore_pricing_rule=0,
-			() => me.apply_pricing_rule()
-		]);
-=======
 		if (this.frm.doc.coupon_code || this.frm._last_coupon_code) {
 			// reset pricing rules if coupon code is set or is unset
 			const _ignore_pricing_rule = this.frm.doc.ignore_pricing_rule;
@@ -2285,7 +2276,6 @@ erpnext.TransactionController = erpnext.taxes_and_totals.extend({
 				() => this.frm._last_coupon_code = this.frm.doc.coupon_code
 			]);
 		}
->>>>>>> version-13
 	}
 });
 

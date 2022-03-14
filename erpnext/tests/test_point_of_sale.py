@@ -25,11 +25,7 @@ class TestPointOfSale(unittest.TestCase):
 		Test Stock and Service Item Search.
 		"""
 
-<<<<<<< HEAD
-		pos_profile = make_pos_profile()
-=======
 		pos_profile = make_pos_profile(name="Test POS Profile for Search")
->>>>>>> version-13
 		item1 = make_item("Test Search Stock Item", {"is_stock_item": 1})
 		make_stock_entry(
 			item_code="Test Search Stock Item",

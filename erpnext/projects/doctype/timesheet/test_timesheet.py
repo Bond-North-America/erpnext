@@ -151,8 +151,6 @@ class TestTimesheet(unittest.TestCase):
 		settings.ignore_employee_time_overlap = initial_setting
 		settings.save()
 
-<<<<<<< HEAD
-=======
 	def test_timesheet_not_overlapping_with_continuous_timelogs(self):
 		emp = make_employee("test_employee_6@salary.com")
 
@@ -182,7 +180,6 @@ class TestTimesheet(unittest.TestCase):
 
 		timesheet.save() # should not throw an error
 
->>>>>>> version-13
 	def test_to_time(self):
 		emp = make_employee("test_employee_6@salary.com")
 		from_time = now_datetime()

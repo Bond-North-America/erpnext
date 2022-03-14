@@ -231,7 +231,6 @@ class TestStockEntry(ERPNextTestCase):
 	def test_repack_multiple_fg(self):
 		"Test `is_finished_item` for one item repacked into two items."
 		make_stock_entry(item_code="_Test Item", target="_Test Warehouse - _TC", qty=100, basic_rate=100)
-<<<<<<< HEAD
 
 		repack = frappe.copy_doc(test_records[3])
 		repack.posting_date = nowdate()
@@ -258,34 +257,6 @@ class TestStockEntry(ERPNextTestCase):
 		repack.set_stock_entry_type()
 		repack.insert()
 
-=======
-
-		repack = frappe.copy_doc(test_records[3])
-		repack.posting_date = nowdate()
-		repack.posting_time = nowtime()
-
-		repack.items[0].qty = 100.0
-		repack.items[0].transfer_qty = 100.0
-		repack.items[1].qty = 50.0
-
-		repack.append("items", {
-			"conversion_factor": 1.0,
-			"cost_center": "_Test Cost Center - _TC",
-			"doctype": "Stock Entry Detail",
-			"expense_account": "Stock Adjustment - _TC",
-			"basic_rate": 150,
-			"item_code": "_Test Item 2",
-			"parentfield": "items",
-			"qty": 50.0,
-			"stock_uom": "_Test UOM",
-			"t_warehouse": "_Test Warehouse - _TC",
-			"transfer_qty": 50.0,
-			"uom": "_Test UOM"
-		})
-		repack.set_stock_entry_type()
-		repack.insert()
-
->>>>>>> version-13
 		self.assertEqual(repack.items[1].is_finished_item, 1)
 		self.assertEqual(repack.items[2].is_finished_item, 1)
 

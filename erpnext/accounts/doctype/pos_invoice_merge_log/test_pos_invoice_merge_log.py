@@ -281,8 +281,6 @@ class TestPOSInvoiceMergeLog(unittest.TestCase):
 			frappe.set_user("Administrator")
 			frappe.db.sql("delete from `tabPOS Profile`")
 			frappe.db.sql("delete from `tabPOS Invoice`")
-<<<<<<< HEAD
-=======
 
 	@change_settings("System Settings", {"number_format": "#,###.###", "currency_precision": 3, "float_precision": 3})
 	def test_consolidation_round_off_error_3(self):
@@ -380,4 +378,3 @@ class TestPOSInvoiceMergeLog(unittest.TestCase):
 			frappe.set_user("Administrator")
 			frappe.db.sql("delete from `tabPOS Profile`")
 			frappe.db.sql("delete from `tabPOS Invoice`")
->>>>>>> version-13

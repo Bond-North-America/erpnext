@@ -1057,8 +1057,4 @@ def get_sub_assembly_items(bom_no, bom_data, to_produce_qty, indent=0):
 def set_default_warehouses(row, default_warehouses):
 	for field in ['wip_warehouse', 'fg_warehouse']:
 		if not row.get(field):
-<<<<<<< HEAD
 			row[field] = default_warehouses.get(field)
-=======
-			row[field] = default_warehouses.get(field)
->>>>>>> version-13

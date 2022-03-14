@@ -20,10 +20,7 @@ class TestOpeningInvoiceCreationTool(ERPNextTestCase):
 		if not frappe.db.exists("Company", "_Test Opening Invoice Company"):
 			make_company()
 		create_dimension()
-<<<<<<< HEAD
-=======
 		return super().setUpClass()
->>>>>>> version-13
 
 	def make_invoices(self, invoice_type="Sales", company=None, party_1=None, party_2=None, invoice_number=None, department=None):
 		doc = frappe.get_single("Opening Invoice Creation Tool")
