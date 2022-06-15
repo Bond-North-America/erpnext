@@ -23,11 +23,13 @@ class Lead(SellingController):
 		load_address_and_contact(self)
 
 	def before_insert(self):
+		return False
 		if self.address_title and self.address_type:
 			self.address_doc = self.create_address()
 		self.contact_doc = self.create_contact()
 
 	def after_insert(self):
+		return False
 		self.update_links()
 
 	def validate(self):
