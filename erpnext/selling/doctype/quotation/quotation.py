@@ -116,7 +116,7 @@ class Quotation(SellingController):
 
 	@frappe.whitelist()
 	def declare_enquiry_lost(self, lost_reasons_list, detailed_reason=None):
-		if not self.has_sales_order():
+		if not (self.is_fully_ordered() or self.is_partially_ordered()):
 			get_lost_reasons = frappe.get_list("Quotation Lost Reason", fields=["name"])
 			lost_reasons_lst = [reason.get("name") for reason in get_lost_reasons]
 			frappe.db.set(self, "status", "Lost")
@@ -204,6 +204,15 @@ def make_sales_order(source_name, target_doc=None):
 
 def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 	customer = _make_customer(source_name, ignore_permissions)
+	ordered_items = frappe._dict(
+		frappe.db.get_all(
+			"Sales Order Item",
+			{"prevdoc_docname": source_name, "docstatus": 1},
+			["item_code", "sum(qty)"],
+			group_by="item_code",
+			as_list=1,
+		)
+	)
 
 	def set_missing_values(source, target):
 		if customer:
@@ -219,7 +228,9 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 		target.run_method("calculate_taxes_and_totals")
 
 	def update_item(obj, target, source_parent):
-		target.stock_qty = flt(obj.qty) * flt(obj.conversion_factor)
+		balance_qty = obj.qty - ordered_items.get(obj.item_code, 0.0)
+		target.qty = balance_qty if balance_qty > 0 else 0
+		target.stock_qty = flt(target.qty) * flt(obj.conversion_factor)
 
 		if obj.against_blanket_order:
 			target.against_blanket_order = obj.against_blanket_order
@@ -235,6 +246,7 @@ def _make_sales_order(source_name, target_doc=None, ignore_permissions=False):
 				"doctype": "Sales Order Item",
 				"field_map": {"parent": "prevdoc_docname"},
 				"postprocess": update_item,
+				"condition": lambda doc: doc.qty > 0,
 			},
 			"Sales Taxes and Charges": {"doctype": "Sales Taxes and Charges", "add_if_empty": True},
 			"Sales Team": {"doctype": "Sales Team", "add_if_empty": True},
