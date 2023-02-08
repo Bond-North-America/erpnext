@@ -655,12 +655,6 @@ class GrossProfitGenerator(object):
 				return self.calculate_buying_amount_from_sle(
 					row, my_sle, parenttype, parent, item_row, item_code
 				)
-<<<<<<< HEAD
-			else:
-				return flt(row.qty) * self.get_average_buying_rate(row, item_code)
-
-		return 0.0
-=======
 			elif row.sales_order and row.so_detail:
 				incoming_amount = self.get_buying_amount_from_so_dn(row.sales_order, row.so_detail, item_code)
 				if incoming_amount:
@@ -690,7 +684,6 @@ class GrossProfitGenerator(object):
 
 		incoming_amount = query.run()
 		return flt(incoming_amount[0][0]) if incoming_amount else 0
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 
 	def get_average_buying_rate(self, row, item_code):
 		args = row
@@ -792,12 +785,8 @@ class GrossProfitGenerator(object):
 				`tabSales Invoice`.territory, `tabSales Invoice Item`.item_code,
 				`tabSales Invoice Item`.item_name, `tabSales Invoice Item`.description,
 				`tabSales Invoice Item`.warehouse, `tabSales Invoice Item`.item_group,
-<<<<<<< HEAD
-				`tabSales Invoice Item`.brand, `tabSales Invoice Item`.dn_detail,
-=======
 				`tabSales Invoice Item`.brand, `tabSales Invoice Item`.so_detail,
 				`tabSales Invoice Item`.sales_order, `tabSales Invoice Item`.dn_detail,
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 				`tabSales Invoice Item`.delivery_note, `tabSales Invoice Item`.stock_qty as qty,
 				`tabSales Invoice Item`.base_net_rate, `tabSales Invoice Item`.base_net_amount,
 				`tabSales Invoice Item`.name as "item_row", `tabSales Invoice`.is_return,

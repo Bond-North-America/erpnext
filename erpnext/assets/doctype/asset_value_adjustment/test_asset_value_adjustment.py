@@ -6,15 +6,8 @@ import unittest
 import frappe
 from frappe.utils import add_days, get_last_day, nowdate
 
-<<<<<<< HEAD
-from erpnext.assets.doctype.asset.test_asset import create_asset_data
-from erpnext.assets.doctype.asset_value_adjustment.asset_value_adjustment import (
-	get_current_asset_value,
-)
-=======
 from erpnext.assets.doctype.asset.asset import get_asset_value_after_depreciation
 from erpnext.assets.doctype.asset.test_asset import create_asset_data
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
 
 
@@ -48,11 +41,7 @@ class TestAssetValueAdjustment(unittest.TestCase):
 		)
 		asset_doc.submit()
 
-<<<<<<< HEAD
-		current_value = get_current_asset_value(asset_doc.name)
-=======
 		current_value = get_asset_value_after_depreciation(asset_doc.name)
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 		self.assertEqual(current_value, 100000.0)
 
 	def test_asset_depreciation_value_adjustment(self):
@@ -82,11 +71,7 @@ class TestAssetValueAdjustment(unittest.TestCase):
 		)
 		asset_doc.submit()
 
-<<<<<<< HEAD
-		current_value = get_current_asset_value(asset_doc.name)
-=======
 		current_value = get_asset_value_after_depreciation(asset_doc.name)
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 		adj_doc = make_asset_value_adjustment(
 			asset=asset_doc.name, current_asset_value=current_value, new_asset_value=50000.0
 		)

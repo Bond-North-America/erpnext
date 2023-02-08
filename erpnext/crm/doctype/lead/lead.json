@@ -2,10 +2,6 @@
  "actions": [],
  "allow_events_in_timeline": 1,
  "allow_import": 1,
-<<<<<<< HEAD
- "allow_rename": 1,
-=======
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
  "autoname": "naming_series:",
  "creation": "2022-02-08 13:14:41.083327",
  "doctype": "DocType",
@@ -586,8 +582,4 @@
  "states": [],
  "subject_field": "title",
  "title_field": "title"
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580

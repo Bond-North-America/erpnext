@@ -552,8 +552,6 @@ class TestSalesOrder(FrappeTestCase):
 		workflow.is_active = 0
 		workflow.save()
 
-<<<<<<< HEAD
-=======
 	def test_bin_details_of_packed_item(self):
 		# test Update Items with product bundle
 		if not frappe.db.exists("Item", "_Test Product Bundle Item New"):
@@ -590,7 +588,6 @@ class TestSalesOrder(FrappeTestCase):
 		self.assertEqual(flt(bin_details.projected_qty), flt(packed_item.projected_qty))
 		self.assertEqual(flt(bin_details.ordered_qty), flt(packed_item.ordered_qty))
 
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 	def test_update_child_product_bundle(self):
 		# test Update Items with product bundle
 		if not frappe.db.exists("Item", "_Product Bundle Item"):

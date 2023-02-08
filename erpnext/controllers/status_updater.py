@@ -58,11 +58,7 @@ status_map = {
 			"eval:(self.per_delivered == 100 or self.skip_delivery_note) and self.per_billed == 100 and self.docstatus == 1",
 		],
 		["Cancelled", "eval:self.docstatus==2"],
-<<<<<<< HEAD
-		["Closed", "eval:self.status=='Closed'"],
-=======
 		["Closed", "eval:self.status=='Closed' and self.docstatus != 2"],
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 		["On Hold", "eval:self.status=='On Hold'"],
 	],
 	"Purchase Order": [
@@ -83,11 +79,7 @@ status_map = {
 		["Delivered", "eval:self.status=='Delivered'"],
 		["Cancelled", "eval:self.docstatus==2"],
 		["On Hold", "eval:self.status=='On Hold'"],
-<<<<<<< HEAD
-		["Closed", "eval:self.status=='Closed'"],
-=======
 		["Closed", "eval:self.status=='Closed' and self.docstatus != 2"],
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 	],
 	"Delivery Note": [
 		["Draft", None],
@@ -95,11 +87,7 @@ status_map = {
 		["Return Issued", "eval:self.per_returned == 100 and self.docstatus == 1"],
 		["Completed", "eval:self.per_billed == 100 and self.docstatus == 1"],
 		["Cancelled", "eval:self.docstatus==2"],
-<<<<<<< HEAD
-		["Closed", "eval:self.status=='Closed'"],
-=======
 		["Closed", "eval:self.status=='Closed' and self.docstatus != 2"],
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 	],
 	"Purchase Receipt": [
 		["Draft", None],
@@ -107,11 +95,7 @@ status_map = {
 		["Return Issued", "eval:self.per_returned == 100 and self.docstatus == 1"],
 		["Completed", "eval:self.per_billed == 100 and self.docstatus == 1"],
 		["Cancelled", "eval:self.docstatus==2"],
-<<<<<<< HEAD
-		["Closed", "eval:self.status=='Closed'"],
-=======
 		["Closed", "eval:self.status=='Closed' and self.docstatus != 2"],
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 	],
 	"Material Request": [
 		["Draft", None],

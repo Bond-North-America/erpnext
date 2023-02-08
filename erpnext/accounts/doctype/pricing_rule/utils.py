@@ -681,13 +681,6 @@ def get_product_discount_rule(pricing_rule, item_details, args=None, doc=None):
 
 def apply_pricing_rule_for_free_items(doc, pricing_rule_args):
 	if pricing_rule_args:
-<<<<<<< HEAD
-		items = tuple((d.item_code, d.pricing_rules) for d in doc.items if d.is_free_item)
-
-		for args in pricing_rule_args:
-			if not items or (args.get("item_code"), args.get("pricing_rules")) not in items:
-				doc.append("items", args)
-=======
 		args = {(d["item_code"], d["pricing_rules"]): d for d in pricing_rule_args}
 
 		for item in doc.items:
@@ -703,7 +696,6 @@ def apply_pricing_rule_for_free_items(doc, pricing_rule_args):
 
 		for free_item in args.values():
 			doc.append("items", free_item)
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 
 
 def get_pricing_rule_items(pr_doc, other_items=False) -> list:

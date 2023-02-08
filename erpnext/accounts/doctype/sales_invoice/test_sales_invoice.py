@@ -1166,8 +1166,6 @@ class TestSalesInvoice(unittest.TestCase):
 
 		frappe.db.sql("delete from `tabPOS Profile`")
 
-<<<<<<< HEAD
-=======
 	def test_bin_details_of_packed_item(self):
 		from erpnext.selling.doctype.product_bundle.test_product_bundle import make_product_bundle
 		from erpnext.stock.doctype.item.test_item import make_item
@@ -1208,7 +1206,6 @@ class TestSalesInvoice(unittest.TestCase):
 		self.assertEqual(flt(bin_details.projected_qty), flt(packed_item.projected_qty))
 		self.assertEqual(flt(bin_details.ordered_qty), flt(packed_item.ordered_qty))
 
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 	def test_pos_si_without_payment(self):
 		make_pos_profile()
 

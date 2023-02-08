@@ -10,10 +10,6 @@ app_email = "info@erpnext.com"
 app_license = "GNU General Public License (v3)"
 source_link = "https://github.com/frappe/erpnext"
 app_logo_url = "/assets/erpnext/images/erpnext-logo.svg"
-<<<<<<< HEAD
-required_apps = ["payments"]
-=======
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 
 
 develop_version = "14.x.x-develop"

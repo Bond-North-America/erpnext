@@ -117,10 +117,7 @@ def make_stock_entry(**args):
 			args.item = "_Test Item"
 
 	s.company = args.company or erpnext.get_default_company()
-<<<<<<< HEAD
-=======
 	s.add_to_transit = args.add_to_transit or 0
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 	s.purchase_receipt_no = args.purchase_receipt_no
 	s.delivery_note_no = args.delivery_note_no
 	s.sales_invoice_no = args.sales_invoice_no

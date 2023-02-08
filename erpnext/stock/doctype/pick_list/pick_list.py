@@ -11,11 +11,7 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.model.mapper import map_child_doc
 from frappe.query_builder import Case
-<<<<<<< HEAD
-from frappe.query_builder.functions import Locate
-=======
 from frappe.query_builder.functions import IfNull, Locate, Sum
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 from frappe.utils import cint, floor, flt, today
 from frappe.utils.nestedset import get_descendants_of
 
@@ -507,44 +503,6 @@ def get_available_item_locations_for_serialized_item(
 def get_available_item_locations_for_batched_item(
 	item_code, from_warehouses, required_qty, company
 ):
-<<<<<<< HEAD
-	warehouse_condition = "and warehouse in %(warehouses)s" if from_warehouses else ""
-	batch_locations = frappe.db.sql(
-		"""
-		SELECT
-			sle.`warehouse`,
-			sle.`batch_no`,
-			SUM(sle.`actual_qty`) AS `qty`
-		FROM
-			`tabStock Ledger Entry` sle, `tabBatch` batch
-		WHERE
-			sle.batch_no = batch.name
-			and sle.`item_code`=%(item_code)s
-			and sle.`company` = %(company)s
-			and batch.disabled = 0
-			and sle.is_cancelled=0
-			and IFNULL(batch.`expiry_date`, '2200-01-01') > %(today)s
-			{warehouse_condition}
-		GROUP BY
-			sle.`warehouse`,
-			sle.`batch_no`,
-			sle.`item_code`
-		HAVING `qty` > 0
-		ORDER BY IFNULL(batch.`expiry_date`, '2200-01-01'), batch.`creation`, sle.`batch_no`, sle.`warehouse`
-	""".format(
-			warehouse_condition=warehouse_condition
-		),
-		{  # nosec
-			"item_code": item_code,
-			"company": company,
-			"today": today(),
-			"warehouses": from_warehouses,
-		},
-		as_dict=1,
-	)
-
-	return batch_locations
-=======
 	sle = frappe.qb.DocType("Stock Ledger Entry")
 	batch = frappe.qb.DocType("Batch")
 
@@ -569,7 +527,6 @@ def get_available_item_locations_for_batched_item(
 		query = query.where(sle.warehouse.isin(from_warehouses))
 
 	return query.run(as_dict=True)
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 
 
 def get_available_item_locations_for_serial_and_batched_item(

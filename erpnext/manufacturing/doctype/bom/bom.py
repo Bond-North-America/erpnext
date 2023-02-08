@@ -614,20 +614,6 @@ class BOM(WebsiteGenerator):
 		"""Update workstation rate and calculates totals"""
 		self.operating_cost = 0
 		self.base_operating_cost = 0
-<<<<<<< HEAD
-		for d in self.get("operations"):
-			if d.workstation:
-				self.update_rate_and_time(d, update_hour_rate)
-
-			operating_cost = d.operating_cost
-			base_operating_cost = d.base_operating_cost
-			if d.set_cost_based_on_bom_qty:
-				operating_cost = flt(d.cost_per_unit) * flt(self.quantity)
-				base_operating_cost = flt(d.base_cost_per_unit) * flt(self.quantity)
-
-			self.operating_cost += flt(operating_cost)
-			self.base_operating_cost += flt(base_operating_cost)
-=======
 		if self.get("with_operations"):
 			for d in self.get("operations"):
 				if d.workstation:
@@ -648,7 +634,6 @@ class BOM(WebsiteGenerator):
 			)
 			self.operating_cost = total_operating_cost
 			self.base_operating_cost = flt(total_operating_cost * self.conversion_rate, 2)
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 
 	def update_rate_and_time(self, row, update_hour_rate=False):
 		if not row.hour_rate or update_hour_rate:

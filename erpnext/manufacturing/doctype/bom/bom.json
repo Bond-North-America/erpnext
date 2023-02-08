@@ -33,12 +33,9 @@
   "column_break_23",
   "transfer_material_against",
   "routing",
-<<<<<<< HEAD
-=======
   "fg_based_operating_cost",
   "fg_based_section_section",
   "operating_cost_per_bom_quantity",
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
   "operations_section",
   "operations",
   "materials_section",
@@ -581,9 +578,6 @@
   {
    "fieldname": "scrap_items_section",
    "fieldtype": "Section Break",
-<<<<<<< HEAD
-   "label": "Scrap Items"
-=======
    "hide_border": 1,
    "label": "Scrap Items"
   },
@@ -604,7 +598,6 @@
    "fieldname": "operating_cost_per_bom_quantity",
    "fieldtype": "Currency",
    "label": "Operating Cost Per BOM Quantity"
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
   }
  ],
  "icon": "fa fa-sitemap",
@@ -612,11 +605,7 @@
  "image_field": "image",
  "is_submittable": 1,
  "links": [],
-<<<<<<< HEAD
- "modified": "2023-01-03 18:42:27.732107",
-=======
  "modified": "2023-01-10 07:47:08.652616",
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
  "modified_by": "Administrator",
  "module": "Manufacturing",
  "name": "BOM",

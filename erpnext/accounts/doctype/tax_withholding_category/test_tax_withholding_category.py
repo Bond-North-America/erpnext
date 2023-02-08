@@ -16,11 +16,7 @@ class TestTaxWithholdingCategory(unittest.TestCase):
 	def setUpClass(self):
 		# create relevant supplier, etc
 		create_records()
-<<<<<<< HEAD
-		create_tax_with_holding_category()
-=======
 		create_tax_withholding_category_records()
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 
 	def tearDown(self):
 		cancel_invoices()
@@ -42,11 +38,7 @@ class TestTaxWithholdingCategory(unittest.TestCase):
 		pi = create_purchase_invoice(supplier="Test TDS Supplier")
 		pi.submit()
 
-<<<<<<< HEAD
-		# assert equal tax deduction on total invoice amount uptil now
-=======
 		# assert equal tax deduction on total invoice amount until now
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 		self.assertEqual(pi.taxes_and_charges_deducted, 3000)
 		self.assertEqual(pi.grand_total, 7000)
 		invoices.append(pi)
@@ -55,11 +47,7 @@ class TestTaxWithholdingCategory(unittest.TestCase):
 		pi = create_purchase_invoice(supplier="Test TDS Supplier", rate=5000)
 		pi.submit()
 
-<<<<<<< HEAD
-		# assert equal tax deduction on total invoice amount uptil now
-=======
 		# assert equal tax deduction on total invoice amount until now
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 		self.assertEqual(pi.taxes_and_charges_deducted, 500)
 		invoices.append(pi)
 
@@ -142,11 +130,7 @@ class TestTaxWithholdingCategory(unittest.TestCase):
 			invoices.append(si)
 
 		# create another invoice whose total when added to previously created invoice,
-<<<<<<< HEAD
-		# surpasses cumulative threshhold
-=======
 		# surpasses cumulative threshold
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 		si = create_sales_invoice(customer="Test TCS Customer", rate=12000)
 		si.submit()
 
@@ -345,8 +329,6 @@ class TestTaxWithholdingCategory(unittest.TestCase):
 		for d in reversed(invoices):
 			d.cancel()
 
-<<<<<<< HEAD
-=======
 	def test_tax_withholding_via_payment_entry_for_advances(self):
 		frappe.db.set_value(
 			"Supplier", "Test TDS Supplier7", "tax_withholding_category", "Advance TDS Category"
@@ -379,7 +361,6 @@ class TestTaxWithholdingCategory(unittest.TestCase):
 		pe2.cancel()
 		pe3.cancel()
 
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 
 def cancel_invoices():
 	purchase_invoices = frappe.get_all(
@@ -501,8 +482,6 @@ def create_sales_invoice(**args):
 	return si
 
 
-<<<<<<< HEAD
-=======
 def create_payment_entry(**args):
 	# return payment entry doc object
 	args = frappe._dict(args)
@@ -529,7 +508,6 @@ def create_payment_entry(**args):
 	return pe
 
 
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 def create_records():
 	# create a new suppliers
 	for name in [
@@ -540,10 +518,7 @@ def create_records():
 		"Test TDS Supplier4",
 		"Test TDS Supplier5",
 		"Test TDS Supplier6",
-<<<<<<< HEAD
-=======
 		"Test TDS Supplier7",
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 	]:
 		if frappe.db.exists("Supplier", name):
 			continue
@@ -614,145 +589,6 @@ def create_records():
 		).insert()
 
 
-<<<<<<< HEAD
-def create_tax_with_holding_category():
-	fiscal_year = get_fiscal_year(today(), company="_Test Company")
-	# Cumulative threshold
-	if not frappe.db.exists("Tax Withholding Category", "Cumulative Threshold TDS"):
-		frappe.get_doc(
-			{
-				"doctype": "Tax Withholding Category",
-				"name": "Cumulative Threshold TDS",
-				"category_name": "10% TDS",
-				"rates": [
-					{
-						"from_date": fiscal_year[1],
-						"to_date": fiscal_year[2],
-						"tax_withholding_rate": 10,
-						"single_threshold": 0,
-						"cumulative_threshold": 30000.00,
-					}
-				],
-				"accounts": [{"company": "_Test Company", "account": "TDS - _TC"}],
-			}
-		).insert()
-
-	if not frappe.db.exists("Tax Withholding Category", "Cumulative Threshold TCS"):
-		frappe.get_doc(
-			{
-				"doctype": "Tax Withholding Category",
-				"name": "Cumulative Threshold TCS",
-				"category_name": "10% TCS",
-				"rates": [
-					{
-						"from_date": fiscal_year[1],
-						"to_date": fiscal_year[2],
-						"tax_withholding_rate": 10,
-						"single_threshold": 0,
-						"cumulative_threshold": 30000.00,
-					}
-				],
-				"accounts": [{"company": "_Test Company", "account": "TCS - _TC"}],
-			}
-		).insert()
-
-	# Single thresold
-	if not frappe.db.exists("Tax Withholding Category", "Single Threshold TDS"):
-		frappe.get_doc(
-			{
-				"doctype": "Tax Withholding Category",
-				"name": "Single Threshold TDS",
-				"category_name": "10% TDS",
-				"rates": [
-					{
-						"from_date": fiscal_year[1],
-						"to_date": fiscal_year[2],
-						"tax_withholding_rate": 10,
-						"single_threshold": 20000.00,
-						"cumulative_threshold": 0,
-					}
-				],
-				"accounts": [{"company": "_Test Company", "account": "TDS - _TC"}],
-			}
-		).insert()
-
-	if not frappe.db.exists("Tax Withholding Category", "New TDS Category"):
-		frappe.get_doc(
-			{
-				"doctype": "Tax Withholding Category",
-				"name": "New TDS Category",
-				"category_name": "New TDS Category",
-				"round_off_tax_amount": 1,
-				"consider_party_ledger_amount": 1,
-				"tax_on_excess_amount": 1,
-				"rates": [
-					{
-						"from_date": fiscal_year[1],
-						"to_date": fiscal_year[2],
-						"tax_withholding_rate": 10,
-						"single_threshold": 0,
-						"cumulative_threshold": 30000,
-					}
-				],
-				"accounts": [{"company": "_Test Company", "account": "TDS - _TC"}],
-			}
-		).insert()
-
-	if not frappe.db.exists("Tax Withholding Category", "Test Service Category"):
-		frappe.get_doc(
-			{
-				"doctype": "Tax Withholding Category",
-				"name": "Test Service Category",
-				"category_name": "Test Service Category",
-				"rates": [
-					{
-						"from_date": fiscal_year[1],
-						"to_date": fiscal_year[2],
-						"tax_withholding_rate": 10,
-						"single_threshold": 2000,
-						"cumulative_threshold": 2000,
-					}
-				],
-				"accounts": [{"company": "_Test Company", "account": "TDS - _TC"}],
-			}
-		).insert()
-
-	if not frappe.db.exists("Tax Withholding Category", "Test Goods Category"):
-		frappe.get_doc(
-			{
-				"doctype": "Tax Withholding Category",
-				"name": "Test Goods Category",
-				"category_name": "Test Goods Category",
-				"rates": [
-					{
-						"from_date": fiscal_year[1],
-						"to_date": fiscal_year[2],
-						"tax_withholding_rate": 10,
-						"single_threshold": 2000,
-						"cumulative_threshold": 2000,
-					}
-				],
-				"accounts": [{"company": "_Test Company", "account": "TDS - _TC"}],
-			}
-		).insert()
-
-	if not frappe.db.exists("Tax Withholding Category", "Test Multi Invoice Category"):
-		frappe.get_doc(
-			{
-				"doctype": "Tax Withholding Category",
-				"name": "Test Multi Invoice Category",
-				"category_name": "Test Multi Invoice Category",
-				"rates": [
-					{
-						"from_date": fiscal_year[1],
-						"to_date": fiscal_year[2],
-						"tax_withholding_rate": 10,
-						"single_threshold": 5000,
-						"cumulative_threshold": 10000,
-					}
-				],
-				"accounts": [{"company": "_Test Company", "account": "TDS - _TC"}],
-=======
 def create_tax_withholding_category_records():
 	fiscal_year = get_fiscal_year(today(), company="_Test Company")
 	from_date = fiscal_year[1]
@@ -877,6 +713,5 @@ def create_tax_withholding_category(
 					}
 				],
 				"accounts": [{"company": "_Test Company", "account": account}],
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 			}
 		).insert()

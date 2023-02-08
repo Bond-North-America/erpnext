@@ -410,8 +410,6 @@ def get_tds_amount(ldc, parties, inv, tax_details, tax_deducted, vouchers):
 	tds_amount = 0
 	invoice_filters = {"name": ("in", vouchers), "docstatus": 1, "apply_tds": 1}
 
-<<<<<<< HEAD
-=======
 	## for TDS to be deducted on advances
 	payment_entry_filters = {
 		"party_type": "Supplier",
@@ -423,19 +421,15 @@ def get_tds_amount(ldc, parties, inv, tax_details, tax_deducted, vouchers):
 		"tax_withholding_category": tax_details.get("tax_withholding_category"),
 	}
 
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 	field = "sum(tax_withholding_net_total)"
 
 	if cint(tax_details.consider_party_ledger_amount):
 		invoice_filters.pop("apply_tds", None)
 		field = "sum(grand_total)"
 
-<<<<<<< HEAD
-=======
 		payment_entry_filters.pop("apply_tax_withholding_amount", None)
 		payment_entry_filters.pop("tax_withholding_category", None)
 
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 	supp_credit_amt = frappe.db.get_value("Purchase Invoice", invoice_filters, field) or 0.0
 
 	supp_jv_credit_amt = (
@@ -447,20 +441,11 @@ def get_tds_amount(ldc, parties, inv, tax_details, tax_deducted, vouchers):
 				"party": ("in", parties),
 				"reference_type": ("!=", "Purchase Invoice"),
 			},
-<<<<<<< HEAD
-			"sum(credit_in_account_currency)",
-=======
 			"sum(credit_in_account_currency - debit_in_account_currency)",
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 		)
 		or 0.0
 	)
 
-<<<<<<< HEAD
-	supp_credit_amt += supp_jv_credit_amt
-	supp_credit_amt += inv.tax_withholding_net_total
-
-=======
 	# Get Amount via payment entry
 	payment_entry_amounts = frappe.db.get_all(
 		"Payment Entry",
@@ -478,7 +463,6 @@ def get_tds_amount(ldc, parties, inv, tax_details, tax_deducted, vouchers):
 		else:
 			supp_credit_amt -= type.amount
 
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 	threshold = tax_details.get("threshold", 0)
 	cumulative_threshold = tax_details.get("cumulative_threshold", 0)
 

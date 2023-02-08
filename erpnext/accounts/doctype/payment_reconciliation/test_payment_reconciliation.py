@@ -747,8 +747,6 @@ class TestPaymentReconciliation(FrappeTestCase):
 		self.assertEqual(len(pr.get("invoices")), 0)
 		self.assertEqual(len(pr.get("payments")), 0)
 
-<<<<<<< HEAD
-=======
 	def test_cost_center_filter_on_vouchers(self):
 		"""
 		Test Cost Center filter is applied on Invoices, Payment Entries and Journals
@@ -816,7 +814,6 @@ class TestPaymentReconciliation(FrappeTestCase):
 		payment_vouchers = [x.get("reference_name") for x in pr.get("payments")]
 		self.assertCountEqual(payment_vouchers, [je2.name, pe2.name])
 
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 
 def make_customer(customer_name, currency=None):
 	if not frappe.db.exists("Customer", customer_name):

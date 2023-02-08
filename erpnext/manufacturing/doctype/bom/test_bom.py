@@ -202,8 +202,6 @@ class TestBOM(FrappeTestCase):
 
 		self.assertEqual(bom.items[0].rate, 20)
 
-<<<<<<< HEAD
-=======
 	def test_bom_cost_with_fg_based_operating_cost(self):
 		bom = frappe.copy_doc(test_records[4])
 		bom.insert()
@@ -231,7 +229,6 @@ class TestBOM(FrappeTestCase):
 		self.assertAlmostEqual(bom.base_raw_material_cost, base_raw_material_cost)
 		self.assertAlmostEqual(bom.base_total_cost, base_raw_material_cost + base_op_cost)
 
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 	def test_subcontractor_sourced_item(self):
 		item_code = "_Test Subcontracted FG Item 1"
 		set_backflush_based_on("Material Transferred for Subcontract")

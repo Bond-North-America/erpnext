@@ -169,11 +169,8 @@ frappe.ui.form.on('Stock Entry', {
 	},
 
 	refresh: function(frm) {
-<<<<<<< HEAD
-=======
 		frm.trigger("get_items_from_transit_entry");
 
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 		if(!frm.doc.docstatus) {
 			frm.trigger('validate_purpose_consumption');
 			frm.add_custom_button(__('Material Request'), function() {
@@ -342,8 +339,6 @@ frappe.ui.form.on('Stock Entry', {
 		}
 	},
 
-<<<<<<< HEAD
-=======
 	get_items_from_transit_entry: function(frm) {
 		if (frm.doc.docstatus===0) {
 			frm.add_custom_button(__('Transit Entry'), function() {
@@ -366,7 +361,6 @@ frappe.ui.form.on('Stock Entry', {
 		}
 	},
 
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 	before_save: function(frm) {
 		frm.doc.items.forEach((item) => {
 			item.uom = item.uom || item.stock_uom;

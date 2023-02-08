@@ -162,8 +162,6 @@
   "item": "_Test Variant Item",
   "quantity": 1.0,
   "with_operations": 1
-<<<<<<< HEAD
-=======
  },
  {
   "items": [
@@ -190,6 +188,5 @@
   "with_operations": 0,
   "fg_based_operating_cost": 1,
   "operating_cost_per_bom_quantity": 140
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
  }
 ]

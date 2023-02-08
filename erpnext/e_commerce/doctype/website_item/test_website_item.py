@@ -174,14 +174,10 @@ class TestWebsiteItem(unittest.TestCase):
 	# Website Item Portal Tests Begin
 
 	def test_website_item_breadcrumbs(self):
-<<<<<<< HEAD
-		"Check if breadcrumbs include homepage, product listing navigation page, parent item group(s) and item group."
-=======
 		"""
 		Check if breadcrumbs include homepage, product listing navigation page,
 		parent item group(s) and item group
 		"""
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 		from erpnext.setup.doctype.item_group.item_group import get_parent_item_groups
 
 		item_code = "Test Breadcrumb Item"
@@ -204,11 +200,7 @@ class TestWebsiteItem(unittest.TestCase):
 		breadcrumbs = get_parent_item_groups(item.item_group)
 
 		self.assertEqual(breadcrumbs[0]["name"], "Home")
-<<<<<<< HEAD
-		self.assertEqual(breadcrumbs[1]["name"], "Shop by Category")
-=======
 		self.assertEqual(breadcrumbs[1]["name"], "All Products")
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 		self.assertEqual(breadcrumbs[2]["name"], "_Test Item Group B")  # parent item group
 		self.assertEqual(breadcrumbs[3]["name"], "_Test Item Group B - 1")
 

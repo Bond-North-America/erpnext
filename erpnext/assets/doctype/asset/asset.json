@@ -519,11 +519,6 @@
    "group": "Value",
    "link_doctype": "Asset Value Adjustment",
    "link_fieldname": "asset"
-<<<<<<< HEAD
-  }
- ],
- "modified": "2023-01-16 23:35:37.423100",
-=======
   },
   {
    "group": "Journal Entry",
@@ -533,7 +528,6 @@
   }
  ],
  "modified": "2023-01-25 17:45:48.649543",
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
  "modified_by": "Administrator",
  "module": "Assets",
  "name": "Asset",

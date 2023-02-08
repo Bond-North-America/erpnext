@@ -221,11 +221,7 @@ class QualityInspection(Document):
 def item_query(doctype, txt, searchfield, start, page_len, filters):
 	from frappe.desk.reportview import get_match_cond
 
-<<<<<<< HEAD
-	from_doctype = cstr(filters.get("doctype"))
-=======
 	from_doctype = cstr(filters.get("from"))
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 	if not from_doctype or not frappe.db.exists("DocType", from_doctype):
 		return []
 

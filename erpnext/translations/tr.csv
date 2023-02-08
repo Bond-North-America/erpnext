@@ -3537,11 +3537,7 @@ Quality Feedback Template,Kalite Geribildirim Şablonu,
 Rules for applying different promotional schemes.,Farklı promosyon programlarını uygulama kuralları.,
 Shift,vardiya,
 Show {0},{0} göster,
-<<<<<<< HEAD
-"Special Characters except ""-"", ""#"", ""."", ""/"", ""{"" and ""}"" not allowed in naming series","&quot;-&quot;, &quot;#&quot;, &quot;.&quot;, &quot;/&quot;, &quot;{&quot; Ve &quot;}&quot; dışındaki Özel Karakterler, seri dizisine izin verilmez",
-=======
 "Special Characters except '-', '#', '.', '/', '{{' and '}}' not allowed in naming series {0}","&quot;-&quot;, &quot;#&quot;, &quot;.&quot;, &quot;/&quot;, &quot;{{&quot; Ve &quot;}}&quot; dışındaki Özel Karakterler, seri dizisine izin verilmez {0}",
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 Target Details,Hedef Detayları,
 {0} already has a Parent Procedure {1}.,{0} zaten bir {1} veli prosedürüne sahip.,
 API,API,

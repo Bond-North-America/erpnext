@@ -17,10 +17,7 @@ from erpnext.stock.doctype.item.test_item import (
 from erpnext.stock.doctype.serial_no.serial_no import *  # noqa
 from erpnext.stock.doctype.stock_entry.stock_entry import (
 	FinishedGoodError,
-<<<<<<< HEAD
-=======
 	make_stock_in_entry,
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 	move_sample_to_retention_warehouse,
 )
 from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
@@ -164,8 +161,6 @@ class TestStockEntry(FrappeTestCase):
 
 		self.assertTrue(item_code in items)
 
-<<<<<<< HEAD
-=======
 	def test_add_to_transit_entry(self):
 		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 
@@ -213,7 +208,6 @@ class TestStockEntry(FrappeTestCase):
 
 		# create add to transit
 
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 	def test_material_receipt_gl_entry(self):
 		company = frappe.db.get_value("Warehouse", "Stores - TCP1", "company")
 

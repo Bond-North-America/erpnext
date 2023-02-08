@@ -25,11 +25,7 @@ class SellingController(StockController):
 	def onload(self):
 		super(SellingController, self).onload()
 		if self.doctype in ("Sales Order", "Delivery Note", "Sales Invoice"):
-<<<<<<< HEAD
-			for item in self.get("items"):
-=======
 			for item in self.get("items") + (self.get("packed_items") or []):
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 				item.update(get_bin_details(item.item_code, item.warehouse, include_child_warehouses=True))
 
 	def validate(self):

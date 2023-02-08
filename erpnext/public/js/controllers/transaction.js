@@ -1473,10 +1473,7 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 					"parenttype": d.parenttype,
 					"parent": d.parent,
 					"pricing_rules": d.pricing_rules,
-<<<<<<< HEAD
-=======
 					"is_free_item": d.is_free_item,
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 					"warehouse": d.warehouse,
 					"serial_no": d.serial_no,
 					"batch_no": d.batch_no,
@@ -1694,13 +1691,10 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 		var me = this;
 		var valid = true;
 
-<<<<<<< HEAD
-=======
 		if (frappe.flags.ignore_company_party_validation) {
 			return valid;
 		}
 
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 		$.each(["company", "customer"], function(i, fieldname) {
 			if(frappe.meta.has_field(me.frm.doc.doctype, fieldname) && me.frm.doc.doctype != "Purchase Order") {
 				if (!me.frm.doc[fieldname]) {

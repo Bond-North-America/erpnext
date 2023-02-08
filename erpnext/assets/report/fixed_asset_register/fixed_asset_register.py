@@ -4,23 +4,16 @@
 
 import frappe
 from frappe import _
-<<<<<<< HEAD
-from frappe.utils import cstr, flt, formatdate, getdate
-=======
 from frappe.query_builder.functions import Sum
 from frappe.utils import cstr, formatdate, getdate
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 
 from erpnext.accounts.report.financial_statements import (
 	get_fiscal_year_data,
 	get_period_list,
 	validate_fiscal_year,
 )
-<<<<<<< HEAD
-=======
 from erpnext.assets.doctype.asset.asset import get_asset_value_after_depreciation
 from erpnext.assets.doctype.asset.depreciation import get_depreciation_accounts
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 
 
 def execute(filters=None):
@@ -95,10 +88,7 @@ def get_data(filters):
 			"asset_name",
 			"status",
 			"department",
-<<<<<<< HEAD
-=======
 			"company",
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 			"cost_center",
 			"calculate_depreciation",
 			"purchase_receipt",
@@ -112,10 +102,6 @@ def get_data(filters):
 		]
 		assets_record = frappe.db.get_all("Asset", filters=conditions, fields=fields)
 
-<<<<<<< HEAD
-	for asset in assets_record:
-		asset_value = get_asset_value(asset, filters.finance_book)
-=======
 	finance_book_filter = ("is", "not set")
 	if filters.finance_book:
 		finance_book_filter = ("=", filters.finance_book)
@@ -135,7 +121,6 @@ def get_data(filters):
 				continue
 
 		asset_value = get_asset_value_after_depreciation(asset.asset_id, filters.finance_book)
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 		row = {
 			"asset_id": asset.asset_id,
 			"asset_name": asset.asset_name,
@@ -146,11 +131,7 @@ def get_data(filters):
 			or pi_supplier_map.get(asset.purchase_invoice),
 			"gross_purchase_amount": asset.gross_purchase_amount,
 			"opening_accumulated_depreciation": asset.opening_accumulated_depreciation,
-<<<<<<< HEAD
-			"depreciated_amount": depreciation_amount_map.get(asset.asset_id) or 0.0,
-=======
 			"depreciated_amount": get_depreciation_amount_of_asset(asset, depreciation_amount_map, filters),
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 			"available_for_use_date": asset.available_for_use_date,
 			"location": asset.location,
 			"asset_category": asset.asset_category,
@@ -162,24 +143,6 @@ def get_data(filters):
 	return data
 
 
-<<<<<<< HEAD
-def get_asset_value(asset, finance_book=None):
-	if not asset.calculate_depreciation:
-		return flt(asset.gross_purchase_amount) - flt(asset.opening_accumulated_depreciation)
-
-	finance_book_filter = ["finance_book", "is", "not set"]
-	if finance_book:
-		finance_book_filter = ["finance_book", "=", finance_book]
-
-	return frappe.db.get_value(
-		doctype="Asset Finance Book",
-		filters=[["parent", "=", asset.asset_id], finance_book_filter],
-		fieldname="value_after_depreciation",
-	)
-
-
-=======
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 def prepare_chart_data(data, filters):
 	labels_values_map = {}
 	date_field = frappe.scrub(filters.date_based_on)
@@ -225,8 +188,6 @@ def prepare_chart_data(data, filters):
 	}
 
 
-<<<<<<< HEAD
-=======
 def get_depreciation_amount_of_asset(asset, depreciation_amount_map, filters):
 	if asset.calculate_depreciation:
 		depr_amount = depreciation_amount_map.get(asset.asset_id) or 0.0
@@ -236,7 +197,6 @@ def get_depreciation_amount_of_asset(asset, depreciation_amount_map, filters):
 	return depr_amount
 
 
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 def get_finance_book_value_map(filters):
 	date = filters.to_date if filters.filter_based_on == "Date Range" else filters.year_end_date
 
@@ -256,8 +216,6 @@ def get_finance_book_value_map(filters):
 	)
 
 
-<<<<<<< HEAD
-=======
 def get_manual_depreciation_amount_of_asset(asset, filters):
 	date = filters.to_date if filters.filter_based_on == "Date Range" else filters.year_end_date
 
@@ -283,7 +241,6 @@ def get_manual_depreciation_amount_of_asset(asset, filters):
 	return depr_amount
 
 
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 def get_purchase_receipt_supplier_map():
 	return frappe._dict(
 		frappe.db.sql(

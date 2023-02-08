@@ -159,25 +159,18 @@ def update_qty(bin_name, args):
 		last_sle_qty = (
 			frappe.qb.from_(sle)
 			.select(sle.qty_after_transaction)
-<<<<<<< HEAD
-			.where((sle.item_code == args.get("item_code")) & (sle.warehouse == args.get("warehouse")))
-=======
 			.where(
 				(sle.item_code == args.get("item_code"))
 				& (sle.warehouse == args.get("warehouse"))
 				& (sle.is_cancelled == 0)
 			)
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 			.orderby(CombineDatetime(sle.posting_date, sle.posting_time), order=Order.desc)
 			.orderby(sle.creation, order=Order.desc)
 			.limit(1)
 			.run()
 		)
 
-<<<<<<< HEAD
-=======
 		actual_qty = 0.0
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 		if last_sle_qty:
 			actual_qty = last_sle_qty[0][0]
 

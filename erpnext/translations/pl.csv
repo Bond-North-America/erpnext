@@ -3537,11 +3537,7 @@ Quality Feedback Template,Szablon opinii o jakości,
 Rules for applying different promotional schemes.,Zasady stosowania różnych programów promocyjnych.,
 Shift,Przesunięcie,
 Show {0},Pokaż {0},
-<<<<<<< HEAD
-"Special Characters except ""-"", ""#"", ""."", ""/"", ""{"" and ""}"" not allowed in naming series","Znaki specjalne z wyjątkiem „-”, „#”, „.”, „/”, „{” I „}” niedozwolone w serii nazw",
-=======
 "Special Characters except '-', '#', '.', '/', '{{' and '}}' not allowed in naming series {0}","Znaki specjalne z wyjątkiem &quot;-&quot;, &quot;#&quot;, &quot;।&quot;, &quot;/&quot;, &quot;{{&quot; I &quot;}}&quot; niedozwolone w serii nazw {0}",
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 Target Details,Szczegóły celu,
 {0} already has a Parent Procedure {1}.,{0} ma już procedurę nadrzędną {1}.,
 API,API,

@@ -302,8 +302,6 @@ class TestGrossProfit(FrappeTestCase):
 
 		columns, data = execute(filters=filters)
 		self.assertGreater(len(data), 0)
-<<<<<<< HEAD
-=======
 
 	def test_order_connected_dn_and_inv(self):
 		from erpnext.selling.doctype.sales_order.test_sales_order import make_sales_order
@@ -383,4 +381,3 @@ class TestGrossProfit(FrappeTestCase):
 		}
 		gp_entry = [x for x in data if x.parent_invoice == sinv.name]
 		self.assertDictContainsSubset(expected_entry, gp_entry[0])
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580

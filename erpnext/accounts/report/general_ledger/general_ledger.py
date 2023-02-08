@@ -524,11 +524,7 @@ def get_columns(filters):
 			"options": "GL Entry",
 			"hidden": 1,
 		},
-<<<<<<< HEAD
-		{"label": _("Posting Date"), "fieldname": "posting_date", "fieldtype": "Date", "width": 90},
-=======
 		{"label": _("Posting Date"), "fieldname": "posting_date", "fieldtype": "Date", "width": 100},
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 		{
 			"label": _("Account"),
 			"fieldname": "account",
@@ -540,21 +536,13 @@ def get_columns(filters):
 			"label": _("Debit ({0})").format(currency),
 			"fieldname": "debit",
 			"fieldtype": "Float",
-<<<<<<< HEAD
-			"width": 100,
-=======
 			"width": 130,
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 		},
 		{
 			"label": _("Credit ({0})").format(currency),
 			"fieldname": "credit",
 			"fieldtype": "Float",
-<<<<<<< HEAD
-			"width": 100,
-=======
 			"width": 130,
->>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 		},
 		{
 			"label": _("Balance ({0})").format(currency),
