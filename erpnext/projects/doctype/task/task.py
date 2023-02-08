@@ -97,7 +97,11 @@ class Task(NestedSet):
 				if frappe.db.get_value("Task", d.task, "status") not in ("Completed", "Cancelled"):
 					frappe.throw(
 						_(
+<<<<<<< HEAD
 							"Cannot complete task {0} as its dependant task {1} are not ccompleted / cancelled."
+=======
+							"Cannot complete task {0} as its dependant task {1} are not completed / cancelled."
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 						).format(frappe.bold(self.name), frappe.bold(d.task))
 					)
 

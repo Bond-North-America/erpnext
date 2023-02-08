@@ -17,6 +17,10 @@ from erpnext.stock.doctype.item.test_item import (
 from erpnext.stock.doctype.serial_no.serial_no import *  # noqa
 from erpnext.stock.doctype.stock_entry.stock_entry import (
 	FinishedGoodError,
+<<<<<<< HEAD
+=======
+	make_stock_in_entry,
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 	move_sample_to_retention_warehouse,
 )
 from erpnext.stock.doctype.stock_entry.stock_entry_utils import make_stock_entry
@@ -160,6 +164,56 @@ class TestStockEntry(FrappeTestCase):
 
 		self.assertTrue(item_code in items)
 
+<<<<<<< HEAD
+=======
+	def test_add_to_transit_entry(self):
+		from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
+
+		item_code = "_Test Transit Item"
+		company = "_Test Company"
+
+		create_warehouse("Test From Warehouse")
+		create_warehouse("Test Transit Warehouse")
+		create_warehouse("Test To Warehouse")
+
+		create_item(
+			item_code=item_code,
+			is_stock_item=1,
+			is_purchase_item=1,
+			company=company,
+		)
+
+		# create inward stock entry
+		make_stock_entry(
+			item_code=item_code,
+			target="Test From Warehouse - _TC",
+			qty=10,
+			basic_rate=100,
+			expense_account="Stock Adjustment - _TC",
+			cost_center="Main - _TC",
+		)
+
+		transit_entry = make_stock_entry(
+			item_code=item_code,
+			source="Test From Warehouse - _TC",
+			target="Test Transit Warehouse - _TC",
+			add_to_transit=1,
+			stock_entry_type="Material Transfer",
+			purpose="Material Transfer",
+			qty=10,
+			basic_rate=100,
+			expense_account="Stock Adjustment - _TC",
+			cost_center="Main - _TC",
+		)
+
+		end_transit_entry = make_stock_in_entry(transit_entry.name)
+		self.assertEqual(transit_entry.name, end_transit_entry.outgoing_stock_entry)
+		self.assertEqual(transit_entry.name, end_transit_entry.items[0].against_stock_entry)
+		self.assertEqual(transit_entry.items[0].name, end_transit_entry.items[0].ste_detail)
+
+		# create add to transit
+
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 	def test_material_receipt_gl_entry(self):
 		company = frappe.db.get_value("Warehouse", "Stores - TCP1", "company")
 

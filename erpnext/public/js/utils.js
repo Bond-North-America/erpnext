@@ -333,8 +333,23 @@ $.extend(erpnext.utils, {
 			}
 			frappe.ui.form.make_quick_entry(doctype, null, null, new_doc);
 		});
+<<<<<<< HEAD
 	}
 
+=======
+	},
+
+	// check if payments app is installed on site, if not warn user.
+	check_payments_app: () => {
+		if (frappe.boot.versions && !frappe.boot.versions.payments) {
+			const marketplace_link = '<a href="https://frappecloud.com/marketplace/apps/payments">Marketplace</a>'
+			const github_link = '<a href="https://github.com/frappe/payments/">GitHub</a>'
+			const msg = __("payments app is not installed. Please install it from {0} or {1}", [marketplace_link, github_link])
+			frappe.msgprint(msg);
+		}
+
+	},
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 });
 
 erpnext.utils.select_alternate_items = function(opts) {
@@ -481,7 +496,24 @@ erpnext.utils.update_child_items = function(opts) {
 	const child_meta = frappe.get_meta(`${frm.doc.doctype} Item`);
 	const get_precision = (fieldname) => child_meta.fields.find(f => f.fieldname == fieldname).precision;
 
+<<<<<<< HEAD
 	this.data = [];
+=======
+	this.data = frm.doc[opts.child_docname].map((d) => {
+		return {
+			"docname": d.name,
+			"name": d.name,
+			"item_code": d.item_code,
+			"delivery_date": d.delivery_date,
+			"schedule_date": d.schedule_date,
+			"conversion_factor": d.conversion_factor,
+			"qty": d.qty,
+			"rate": d.rate,
+			"uom": d.uom
+		}
+	});
+
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 	const fields = [{
 		fieldtype:'Data',
 		fieldname:"docname",
@@ -578,7 +610,11 @@ erpnext.utils.update_child_items = function(opts) {
 		})
 	}
 
+<<<<<<< HEAD
 	const dialog = new frappe.ui.Dialog({
+=======
+	new frappe.ui.Dialog({
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 		title: __("Update Items"),
 		fields: [
 			{
@@ -614,6 +650,7 @@ erpnext.utils.update_child_items = function(opts) {
 			refresh_field("items");
 		},
 		primary_action_label: __('Update')
+<<<<<<< HEAD
 	});
 
 	frm.doc[opts.child_docname].forEach(d => {
@@ -632,6 +669,9 @@ erpnext.utils.update_child_items = function(opts) {
 		dialog.fields_dict.trans_items.grid.refresh();
 	})
 	dialog.show();
+=======
+	}).show();
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 }
 
 erpnext.utils.map_current_doc = function(opts) {

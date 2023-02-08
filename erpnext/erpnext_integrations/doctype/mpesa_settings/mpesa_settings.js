@@ -7,6 +7,11 @@ frappe.ui.form.on('Mpesa Settings', {
 	},
 
 	refresh: function(frm) {
+<<<<<<< HEAD
+=======
+		erpnext.utils.check_payments_app();
+
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 		frappe.realtime.on("refresh_mpesa_dashboard", function(){
 			frm.reload_doc();
 			frm.events.setup_account_balance_html(frm);

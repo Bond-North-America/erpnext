@@ -490,6 +490,49 @@ class TestDeliveryNote(FrappeTestCase):
 
 		self.assertEqual(gle_warehouse_amount, 1400)
 
+<<<<<<< HEAD
+=======
+	def test_bin_details_of_packed_item(self):
+		from erpnext.selling.doctype.product_bundle.test_product_bundle import make_product_bundle
+		from erpnext.stock.doctype.item.test_item import make_item
+
+		# test Update Items with product bundle
+		if not frappe.db.exists("Item", "_Test Product Bundle Item New"):
+			bundle_item = make_item("_Test Product Bundle Item New", {"is_stock_item": 0})
+			bundle_item.append(
+				"item_defaults", {"company": "_Test Company", "default_warehouse": "_Test Warehouse - _TC"}
+			)
+			bundle_item.save(ignore_permissions=True)
+
+		make_item("_Packed Item New 1", {"is_stock_item": 1})
+		make_product_bundle("_Test Product Bundle Item New", ["_Packed Item New 1"], 2)
+
+		si = create_delivery_note(
+			item_code="_Test Product Bundle Item New",
+			update_stock=1,
+			warehouse="_Test Warehouse - _TC",
+			transaction_date=add_days(nowdate(), -1),
+			do_not_submit=1,
+		)
+
+		make_stock_entry(item="_Packed Item New 1", target="_Test Warehouse - _TC", qty=120, rate=100)
+
+		bin_details = frappe.db.get_value(
+			"Bin",
+			{"item_code": "_Packed Item New 1", "warehouse": "_Test Warehouse - _TC"},
+			["actual_qty", "projected_qty", "ordered_qty"],
+			as_dict=1,
+		)
+
+		si.transaction_date = nowdate()
+		si.save()
+
+		packed_item = si.packed_items[0]
+		self.assertEqual(flt(bin_details.actual_qty), flt(packed_item.actual_qty))
+		self.assertEqual(flt(bin_details.projected_qty), flt(packed_item.projected_qty))
+		self.assertEqual(flt(bin_details.ordered_qty), flt(packed_item.ordered_qty))
+
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 	def test_return_for_serialized_items(self):
 		se = make_serialized_item()
 		serial_no = get_serial_nos(se.get("items")[0].serial_no)[0]
@@ -650,6 +693,14 @@ class TestDeliveryNote(FrappeTestCase):
 		update_delivery_note_status(dn.name, "Closed")
 		self.assertEqual(frappe.db.get_value("Delivery Note", dn.name, "Status"), "Closed")
 
+<<<<<<< HEAD
+=======
+		# Check cancelling closed delivery note
+		dn.load_from_db()
+		dn.cancel()
+		self.assertEqual(dn.status, "Cancelled")
+
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 	def test_dn_billing_status_case1(self):
 		# SO -> DN -> SI
 		so = make_sales_order()

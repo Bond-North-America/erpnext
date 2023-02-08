@@ -378,6 +378,7 @@ class Deferred_Revenue_and_Expense_Report(object):
 		ret += [{}]
 
 		# add total row
+<<<<<<< HEAD
 		if ret is not []:
 			if self.filters.type == "Revenue":
 				total_row = frappe._dict({"name": "Total Deferred Income"})
@@ -387,6 +388,16 @@ class Deferred_Revenue_and_Expense_Report(object):
 			for idx, period in enumerate(self.period_list, 0):
 				total_row[period.key] = self.period_total[idx].total
 			ret.append(total_row)
+=======
+		if self.filters.type == "Revenue":
+			total_row = frappe._dict({"name": "Total Deferred Income"})
+		elif self.filters.type == "Expense":
+			total_row = frappe._dict({"name": "Total Deferred Expense"})
+
+		for idx, period in enumerate(self.period_list, 0):
+			total_row[period.key] = self.period_total[idx].total
+		ret.append(total_row)
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 
 		return ret
 

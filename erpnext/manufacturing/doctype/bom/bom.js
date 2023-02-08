@@ -65,7 +65,25 @@ frappe.ui.form.on("BOM", {
 		});
 	},
 
+<<<<<<< HEAD
 	onload_post_render(frm) {
+=======
+	validate: function(frm) {
+		if (frm.doc.fg_based_operating_cost && frm.doc.with_operations) {
+			frappe.throw({message: __("Please check either with operations or FG Based Operating Cost."), title: __("Mandatory")});
+		}
+	},
+
+	with_operations: function(frm) {
+		frm.set_df_property("fg_based_operating_cost", "hidden", frm.doc.with_operations ? 1 : 0);
+	},
+
+	fg_based_operating_cost: function(frm) {
+		frm.set_df_property("with_operations", "hidden", frm.doc.fg_based_operating_cost ? 1 : 0);
+	},
+
+	onload_post_render: function(frm) {
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 		frm.get_field("items").grid.set_multiple_add("item_code", "qty");
 	},
 
@@ -532,6 +550,7 @@ erpnext.bom.update_cost = function(doc) {
 };
 
 erpnext.bom.calculate_op_cost = function(doc) {
+<<<<<<< HEAD
 	var op = doc.operations || [];
 	doc.operating_cost = 0.0;
 	doc.base_operating_cost = 0.0;
@@ -544,6 +563,27 @@ erpnext.bom.calculate_op_cost = function(doc) {
 
 		doc.operating_cost += operating_cost;
 		doc.base_operating_cost += base_operating_cost;
+=======
+	doc.operating_cost = 0.0;
+	doc.base_operating_cost = 0.0;
+
+	if(doc.with_operations) {
+		doc.operations.forEach((item) => {
+			let operating_cost = flt(flt(item.hour_rate) * flt(item.time_in_mins) / 60, 2);
+			let base_operating_cost = flt(operating_cost * doc.conversion_rate, 2);
+			frappe.model.set_value('BOM Operation',item.name, {
+				"operating_cost": operating_cost,
+				"base_operating_cost": base_operating_cost
+			});
+
+			doc.operating_cost += operating_cost;
+			doc.base_operating_cost += base_operating_cost;
+		});
+	} else if(doc.fg_based_operating_cost) {
+		let total_operating_cost = doc.quantity * flt(doc.operating_cost_per_bom_quantity);
+		doc.operating_cost = total_operating_cost;
+		doc.base_operating_cost = flt(total_operating_cost * doc.conversion_rate, 2);
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 	}
 	refresh_field(['operating_cost', 'base_operating_cost']);
 };

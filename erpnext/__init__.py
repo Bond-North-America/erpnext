@@ -2,7 +2,11 @@ import inspect
 
 import frappe
 
+<<<<<<< HEAD
 __version__ = "14.13.0"
+=======
+__version__ = "14.15.1"
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 
 
 def get_default_company(user=None):

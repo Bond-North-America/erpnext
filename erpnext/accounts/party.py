@@ -211,7 +211,17 @@ def set_address_details(
 	else:
 		party_details.update(get_company_address(company))
 
+<<<<<<< HEAD
 	if doctype and doctype in ["Delivery Note", "Sales Invoice", "Sales Order", "Quotation"]:
+=======
+	if doctype and doctype in [
+		"Delivery Note",
+		"Sales Invoice",
+		"Sales Order",
+		"Quotation",
+		"POS Invoice",
+	]:
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 		if party_details.company_address:
 			party_details.update(
 				get_fetch_values(doctype, "company_address", party_details.company_address)

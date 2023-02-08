@@ -169,6 +169,11 @@ frappe.ui.form.on('Stock Entry', {
 	},
 
 	refresh: function(frm) {
+<<<<<<< HEAD
+=======
+		frm.trigger("get_items_from_transit_entry");
+
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 		if(!frm.doc.docstatus) {
 			frm.trigger('validate_purpose_consumption');
 			frm.add_custom_button(__('Material Request'), function() {
@@ -337,6 +342,31 @@ frappe.ui.form.on('Stock Entry', {
 		}
 	},
 
+<<<<<<< HEAD
+=======
+	get_items_from_transit_entry: function(frm) {
+		if (frm.doc.docstatus===0) {
+			frm.add_custom_button(__('Transit Entry'), function() {
+				erpnext.utils.map_current_doc({
+					method: "erpnext.stock.doctype.stock_entry.stock_entry.make_stock_in_entry",
+					source_doctype: "Stock Entry",
+					target: frm,
+					date_field: "posting_date",
+					setters: {
+						stock_entry_type: "Material Transfer",
+						purpose: "Material Transfer",
+					},
+					get_query_filters: {
+						docstatus: 1,
+						purpose: "Material Transfer",
+						add_to_transit: 1,
+					}
+				})
+			}, __("Get Items From"));
+		}
+	},
+
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 	before_save: function(frm) {
 		frm.doc.items.forEach((item) => {
 			item.uom = item.uom || item.stock_uom;

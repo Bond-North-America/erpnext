@@ -3537,7 +3537,11 @@ Quality Feedback Template,เทมเพลตข้อเสนอแนะค
 Rules for applying different promotional schemes.,กฎสำหรับการใช้รูปแบบการส่งเสริมการขายต่าง ๆ,
 Shift,เปลี่ยน,
 Show {0},แสดง {0},
+<<<<<<< HEAD
 "Special Characters except ""-"", ""#"", ""."", ""/"", ""{"" and ""}"" not allowed in naming series","ห้ามใช้อักขระพิเศษยกเว้น &quot;-&quot;, &quot;#&quot;, &quot;.&quot;, &quot;/&quot;, &quot;{&quot; และ &quot;}&quot; ในซีรี่ส์",
+=======
+"Special Characters except '-', '#', '.', '/', '{{' and '}}' not allowed in naming series {0}","ห้ามใช้อักขระพิเศษยกเว้น &quot;-&quot;, &quot;#&quot;, &quot;.&quot;, &quot;/&quot;, &quot;{{&quot; และ &quot;}}&quot; ในซีรี่ส์ {0}",
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 Target Details,รายละเอียดเป้าหมาย,
 {0} already has a Parent Procedure {1}.,{0} มี parent Parent {1} อยู่แล้ว,
 API,API,

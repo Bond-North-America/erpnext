@@ -1221,6 +1221,10 @@
   },
   {
    "default": "0",
+<<<<<<< HEAD
+=======
+   "depends_on": "apply_tds",
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
    "fieldname": "tax_withholding_net_total",
    "fieldtype": "Currency",
    "hidden": 1,
@@ -1230,12 +1234,20 @@
    "read_only": 1
   },
   {
+<<<<<<< HEAD
+=======
+   "depends_on": "apply_tds",
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
    "fieldname": "base_tax_withholding_net_total",
    "fieldtype": "Currency",
    "hidden": 1,
    "label": "Base Tax Withholding Net Total",
    "no_copy": 1,
+<<<<<<< HEAD
    "options": "currency",
+=======
+   "options": "Company:company:default_currency",
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
    "print_hide": 1,
    "read_only": 1
   },
@@ -1269,7 +1281,11 @@
  "idx": 105,
  "is_submittable": 1,
  "links": [],
+<<<<<<< HEAD
  "modified": "2022-12-25 18:08:59.074182",
+=======
+ "modified": "2023-01-28 18:59:16.322824",
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
  "modified_by": "Administrator",
  "module": "Buying",
  "name": "Purchase Order",

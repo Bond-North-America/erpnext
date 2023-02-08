@@ -8,7 +8,11 @@ frappe.provide("erpnext.journal_entry");
 frappe.ui.form.on("Journal Entry", {
 	setup: function(frm) {
 		frm.add_fetch("bank_account", "account", "account");
+<<<<<<< HEAD
 		frm.ignore_doctypes_on_cancel_all = ['Sales Invoice', 'Purchase Invoice'];
+=======
+		frm.ignore_doctypes_on_cancel_all = ['Sales Invoice', 'Purchase Invoice', 'Journal Entry'];
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 	},
 
 	refresh: function(frm) {

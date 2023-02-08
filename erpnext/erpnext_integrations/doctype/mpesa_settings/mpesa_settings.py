@@ -9,13 +9,20 @@ from frappe import _
 from frappe.integrations.utils import create_request_log
 from frappe.model.document import Document
 from frappe.utils import call_hook_method, fmt_money, get_request_site_address
+<<<<<<< HEAD
 from payments.utils import create_payment_gateway
+=======
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 
 from erpnext.erpnext_integrations.doctype.mpesa_settings.mpesa_connector import MpesaConnector
 from erpnext.erpnext_integrations.doctype.mpesa_settings.mpesa_custom_fields import (
 	create_custom_pos_fields,
 )
 from erpnext.erpnext_integrations.utils import create_mode_of_payment
+<<<<<<< HEAD
+=======
+from erpnext.utilities import payment_app_import_guard
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 
 
 class MpesaSettings(Document):
@@ -30,6 +37,12 @@ class MpesaSettings(Document):
 			)
 
 	def on_update(self):
+<<<<<<< HEAD
+=======
+		with payment_app_import_guard():
+			from payments.utils import create_payment_gateway
+
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 		create_custom_pos_fields()
 		create_payment_gateway(
 			"Mpesa-" + self.payment_gateway_name,

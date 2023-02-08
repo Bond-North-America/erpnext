@@ -9,7 +9,10 @@ from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt, get_url, nowdate
 from frappe.utils.background_jobs import enqueue
+<<<<<<< HEAD
 from payments.utils import get_payment_gateway_controller
+=======
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 
 from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
 	get_accounting_dimensions,
@@ -22,6 +25,17 @@ from erpnext.accounts.doctype.subscription_plan.subscription_plan import get_pla
 from erpnext.accounts.party import get_party_account, get_party_bank_account
 from erpnext.accounts.utils import get_account_currency
 from erpnext.erpnext_integrations.stripe_integration import create_stripe_subscription
+<<<<<<< HEAD
+=======
+from erpnext.utilities import payment_app_import_guard
+
+
+def _get_payment_gateway_controller(*args, **kwargs):
+	with payment_app_import_guard():
+		from payments.utils import get_payment_gateway_controller
+
+	return get_payment_gateway_controller(*args, **kwargs)
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 
 
 class PaymentRequest(Document):
@@ -44,7 +58,11 @@ class PaymentRequest(Document):
 
 		if existing_payment_request_amount:
 			ref_doc = frappe.get_doc(self.reference_doctype, self.reference_name)
+<<<<<<< HEAD
 			if hasattr(ref_doc, "order_type") and getattr(ref_doc, "order_type") != "Shopping Cart":
+=======
+			if not hasattr(ref_doc, "order_type") or getattr(ref_doc, "order_type") != "Shopping Cart":
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 				ref_amount = get_amount(ref_doc, self.payment_account)
 
 				if existing_payment_request_amount + flt(self.grand_total) > ref_amount:
@@ -110,7 +128,11 @@ class PaymentRequest(Document):
 			self.request_phone_payment()
 
 	def request_phone_payment(self):
+<<<<<<< HEAD
 		controller = get_payment_gateway_controller(self.payment_gateway)
+=======
+		controller = _get_payment_gateway_controller(self.payment_gateway)
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 		request_amount = self.get_request_amount()
 
 		payment_record = dict(
@@ -159,7 +181,11 @@ class PaymentRequest(Document):
 
 	def payment_gateway_validation(self):
 		try:
+<<<<<<< HEAD
 			controller = get_payment_gateway_controller(self.payment_gateway)
+=======
+			controller = _get_payment_gateway_controller(self.payment_gateway)
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 			if hasattr(controller, "on_payment_request_submission"):
 				return controller.on_payment_request_submission(self)
 			else:
@@ -192,7 +218,11 @@ class PaymentRequest(Document):
 			)
 			data.update({"company": frappe.defaults.get_defaults().company})
 
+<<<<<<< HEAD
 		controller = get_payment_gateway_controller(self.payment_gateway)
+=======
+		controller = _get_payment_gateway_controller(self.payment_gateway)
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 		controller.validate_transaction_currency(self.currency)
 
 		if hasattr(controller, "validate_minimum_transaction_amount"):

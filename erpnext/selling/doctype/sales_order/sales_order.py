@@ -26,7 +26,11 @@ from erpnext.manufacturing.doctype.production_plan.production_plan import (
 from erpnext.selling.doctype.customer.customer import check_credit_limit
 from erpnext.setup.doctype.item_group.item_group import get_item_group_defaults
 from erpnext.stock.doctype.item.item import get_item_defaults
+<<<<<<< HEAD
 from erpnext.stock.get_item_details import get_default_bom
+=======
+from erpnext.stock.get_item_details import get_default_bom, get_price_list_rate
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 from erpnext.stock.stock_balance import get_reserved_qty, update_bin_qty
 
 form_grid_templates = {"items": "templates/form_grid/item_grid.html"}
@@ -590,6 +594,26 @@ def make_material_request(source_name, target_doc=None):
 		target.qty = qty - requested_item_qty.get(source.name, 0)
 		target.stock_qty = flt(target.qty) * flt(target.conversion_factor)
 
+<<<<<<< HEAD
+=======
+		args = target.as_dict().copy()
+		args.update(
+			{
+				"company": source_parent.get("company"),
+				"price_list": frappe.db.get_single_value("Buying Settings", "buying_price_list"),
+				"currency": source_parent.get("currency"),
+				"conversion_rate": source_parent.get("conversion_rate"),
+			}
+		)
+
+		target.rate = flt(
+			get_price_list_rate(args=args, item_doc=frappe.get_cached_doc("Item", target.item_code)).get(
+				"price_list_rate"
+			)
+		)
+		target.amount = target.qty * target.rate
+
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 	doc = get_mapped_doc(
 		"Sales Order",
 		source_name,

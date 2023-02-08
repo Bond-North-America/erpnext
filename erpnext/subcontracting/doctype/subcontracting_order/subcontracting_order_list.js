@@ -11,6 +11,10 @@ frappe.listview_settings['Subcontracting Order'] = {
 			"Partial Material Transferred": "purple",
 			"Material Transferred": "blue",
 			"Closed": "red",
+<<<<<<< HEAD
+=======
+			"Cancelled": "red",
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 		};
 		return [__(doc.status), status_colors[doc.status], "status,=," + doc.status];
 	},

@@ -236,8 +236,15 @@ def validate_item_details(args, item):
 
 	validate_end_of_life(item.name, item.end_of_life, item.disabled)
 
+<<<<<<< HEAD
 	if args.transaction_type == "selling" and cint(item.has_variants):
 		throw(_("Item {0} is a template, please select one of its variants").format(item.name))
+=======
+	if cint(item.has_variants):
+		msg = f"Item {item.name} is a template, please select one of its variants"
+
+		throw(_(msg), title=_("Template Item Selected"))
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 
 	elif args.transaction_type == "buying" and args.doctype != "Material Request":
 		if args.get("is_subcontracted"):

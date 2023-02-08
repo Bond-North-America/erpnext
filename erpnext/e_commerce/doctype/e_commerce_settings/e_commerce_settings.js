@@ -48,5 +48,14 @@ frappe.ui.form.on("E Commerce Settings", {
 			frm.set_value('default_customer_group', '');
 			frm.set_value('quotation_series', '');
 		}
+<<<<<<< HEAD
+=======
+	},
+
+	enable_checkout: function(frm) {
+		if (frm.doc.enable_checkout) {
+			erpnext.utils.check_payments_app();
+		}
+>>>>>>> 171df324074f22b76c1db242580aa6a7a3257580
 	}
 });
