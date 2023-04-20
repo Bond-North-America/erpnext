@@ -1696,7 +1696,7 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 		}
 
 		$.each(["company", "customer"], function(i, fieldname) {
-			if(frappe.meta.has_field(me.frm.doc.doctype, fieldname) && me.frm.doc.doctype != "Purchase Order") {
+			if(frappe.meta.has_field(me.frm.doc.doctype, fieldname) && !["Purchase Order","Purchase Invoice"].includes(me.frm.doc.doctype)) {
 				if (!me.frm.doc[fieldname]) {
 					frappe.msgprint(__("Please specify") + ": " +
 						frappe.meta.get_label(me.frm.doc.doctype, fieldname, me.frm.doc.name) +
@@ -1920,7 +1920,7 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 	}
 
 	prompt_user_for_reference_date(){
-		var me = this;
+		let me = this;
 		frappe.prompt({
 			label: __("Cheque/Reference Date"),
 			fieldname: "reference_date",
@@ -1947,7 +1947,7 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 		let has_payment_schedule = this.frm.doc.payment_schedule && this.frm.doc.payment_schedule.length;
 		if(!is_eligible || !has_payment_schedule) return false;
 
-		let has_discount = this.frm.doc.payment_schedule.some(row => row.discount_date);
+		let has_discount = this.frm.doc.payment_schedule.some(row => row.discount);
 		return has_discount;
 	}
 
