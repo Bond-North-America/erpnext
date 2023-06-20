@@ -392,6 +392,9 @@ class AccountsController(TransactionBase):
 				)
 
 	def validate_inter_company_reference(self):
+		if self.get("is_return"):
+			return
+
 		if self.doctype not in ("Purchase Invoice", "Purchase Receipt"):
 			return
 
@@ -755,6 +758,7 @@ class AccountsController(TransactionBase):
 			}
 		)
 
+		update_gl_dict_with_regional_fields(self, gl_dict)
 		accounting_dimensions = get_accounting_dimensions()
 		dimension_dict = frappe._dict()
 
@@ -912,6 +916,9 @@ class AccountsController(TransactionBase):
 				is_inclusive = 1
 
 		return is_inclusive
+
+	def should_show_taxes_as_table_in_print(self):
+		return cint(frappe.db.get_single_value("Accounts Settings", "show_taxes_as_table_in_print"))
 
 	def validate_advance_entries(self):
 		order_field = "sales_order" if self.doctype == "Sales Invoice" else "purchase_order"
@@ -1679,6 +1686,9 @@ class AccountsController(TransactionBase):
 					d.base_payment_amount = flt(
 						d.payment_amount * self.get("conversion_rate"), d.precision("base_payment_amount")
 					)
+		else:
+			self.fetch_payment_terms_from_order(po_or_so, doctype)
+			self.ignore_default_payment_terms_template = 1
 
 	def get_order_details(self):
 		if self.doctype == "Sales Invoice":
@@ -2828,4 +2838,9 @@ def validate_regional(doc):
 
 @erpnext.allow_regional
 def validate_einvoice_fields(doc):
+	pass
+
+
+@erpnext.allow_regional
+def update_gl_dict_with_regional_fields(doc, gl_dict):
 	pass
