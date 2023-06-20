@@ -123,6 +123,15 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 			this.frm.set_query("batch_no", "items", function(doc, cdt, cdn) {
 				return me.set_query_for_batch(doc, cdt, cdn);
 			});
+
+			let batch_field = this.frm.get_docfield('items', 'batch_no');
+			if (batch_field) {
+				batch_field.get_route_options_for_new_doc = (row) => {
+					return {
+						'item': row.doc.item_code
+					}
+				};
+			}
 		}
 
 		if(
@@ -494,7 +503,7 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 								},
 								() => {
 									// for internal customer instead of pricing rule directly apply valuation rate on item
-									if (me.frm.doc.is_internal_customer || me.frm.doc.is_internal_supplier) {
+									if ((me.frm.doc.is_internal_customer || me.frm.doc.is_internal_supplier) && me.frm.doc.represents_company === me.frm.doc.company) {
 										me.get_incoming_rate(item, me.frm.posting_date, me.frm.posting_time,
 											me.frm.doc.doctype, me.frm.doc.company);
 									} else {
