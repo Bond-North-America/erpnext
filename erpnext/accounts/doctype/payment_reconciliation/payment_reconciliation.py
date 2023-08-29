@@ -6,7 +6,7 @@ import frappe
 from frappe import _, msgprint, qb
 from frappe.model.document import Document
 from frappe.query_builder.custom import ConstantColumn
-from frappe.utils import flt, get_link_to_form, getdate, nowdate, today
+from frappe.utils import flt, fmt_money, get_link_to_form, getdate, nowdate, today
 
 import erpnext
 from erpnext.accounts.doctype.process_payment_reconciliation.process_payment_reconciliation import (
@@ -14,6 +14,7 @@ from erpnext.accounts.doctype.process_payment_reconciliation.process_payment_rec
 )
 from erpnext.accounts.utils import (
 	QueryPaymentLedger,
+	create_gain_loss_journal,
 	get_outstanding_invoices,
 	reconcile_against_document,
 )
@@ -260,6 +261,11 @@ class PaymentReconciliation(Document):
 	def calculate_difference_on_allocation_change(self, payment_entry, invoice, allocated_amount):
 		invoice_exchange_map = self.get_invoice_exchange_map(invoice, payment_entry)
 		invoice[0]["exchange_rate"] = invoice_exchange_map.get(invoice[0].get("invoice_number"))
+		if payment_entry[0].get("reference_type") in ["Sales Invoice", "Purchase Invoice"]:
+			payment_entry[0]["exchange_rate"] = invoice_exchange_map.get(
+				payment_entry[0].get("reference_name")
+			)
+
 		new_difference_amount = self.get_difference_amount(
 			payment_entry[0], invoice[0], allocated_amount
 		)
@@ -347,12 +353,6 @@ class PaymentReconciliation(Document):
 				payment_details = self.get_payment_details(row, dr_or_cr)
 				reconciled_entry.append(payment_details)
 
-				if payment_details.difference_amount and row.reference_type not in [
-					"Sales Invoice",
-					"Purchase Invoice",
-				]:
-					self.make_difference_entry(payment_details)
-
 		if entry_list:
 			reconcile_against_document(entry_list, skip_ref_details_update_for_pe)
 
@@ -384,59 +384,6 @@ class PaymentReconciliation(Document):
 		msgprint(_("Successfully Reconciled"))
 
 		self.get_unreconciled_entries()
-
-	def make_difference_entry(self, row):
-		journal_entry = frappe.new_doc("Journal Entry")
-		journal_entry.voucher_type = "Exchange Gain Or Loss"
-		journal_entry.company = self.company
-		journal_entry.posting_date = nowdate()
-		journal_entry.multi_currency = 1
-
-		party_account_currency = frappe.get_cached_value(
-			"Account", self.receivable_payable_account, "account_currency"
-		)
-		difference_account_currency = frappe.get_cached_value(
-			"Account", row.difference_account, "account_currency"
-		)
-
-		# Account Currency has balance
-		dr_or_cr = "debit" if self.party_type == "Customer" else "credit"
-		reverse_dr_or_cr = "debit" if dr_or_cr == "credit" else "credit"
-
-		journal_account = frappe._dict(
-			{
-				"account": self.receivable_payable_account,
-				"party_type": self.party_type,
-				"party": self.party,
-				"account_currency": party_account_currency,
-				"exchange_rate": 0,
-				"cost_center": erpnext.get_default_cost_center(self.company),
-				"reference_type": row.against_voucher_type,
-				"reference_name": row.against_voucher,
-				dr_or_cr: flt(row.difference_amount),
-				dr_or_cr + "_in_account_currency": 0,
-			}
-		)
-
-		journal_entry.append("accounts", journal_account)
-
-		journal_account = frappe._dict(
-			{
-				"account": row.difference_account,
-				"account_currency": difference_account_currency,
-				"exchange_rate": 1,
-				"cost_center": erpnext.get_default_cost_center(self.company),
-				reverse_dr_or_cr + "_in_account_currency": flt(row.difference_amount),
-				reverse_dr_or_cr: flt(row.difference_amount),
-			}
-		)
-
-		journal_entry.append("accounts", journal_account)
-
-		journal_entry.save()
-		journal_entry.submit()
-
-		return journal_entry
 
 	def get_payment_details(self, row, dr_or_cr):
 		return frappe._dict(
@@ -603,16 +550,6 @@ class PaymentReconciliation(Document):
 
 
 def reconcile_dr_cr_note(dr_cr_notes, company):
-	def get_difference_row(inv):
-		if inv.difference_amount != 0 and inv.difference_account:
-			difference_row = {
-				"account": inv.difference_account,
-				inv.dr_or_cr: abs(inv.difference_amount) if inv.difference_amount > 0 else 0,
-				reconcile_dr_or_cr: abs(inv.difference_amount) if inv.difference_amount < 0 else 0,
-				"cost_center": erpnext.get_default_cost_center(company),
-			}
-			return difference_row
-
 	for inv in dr_cr_notes:
 		voucher_type = "Credit Note" if inv.voucher_type == "Sales Invoice" else "Debit Note"
 
@@ -640,6 +577,8 @@ def reconcile_dr_cr_note(dr_cr_notes, company):
 						"reference_type": inv.against_voucher_type,
 						"reference_name": inv.against_voucher,
 						"cost_center": erpnext.get_default_cost_center(company),
+						"user_remark": f"{fmt_money(flt(inv.allocated_amount), currency=company_currency)} against {inv.against_voucher}",
+						"exchange_rate": inv.exchange_rate,
 					},
 					{
 						"account": inv.account,
@@ -653,13 +592,42 @@ def reconcile_dr_cr_note(dr_cr_notes, company):
 						"reference_type": inv.voucher_type,
 						"reference_name": inv.voucher_no,
 						"cost_center": erpnext.get_default_cost_center(company),
+						"user_remark": f"{fmt_money(flt(inv.allocated_amount), currency=company_currency)} from {inv.voucher_no}",
+						"exchange_rate": inv.exchange_rate,
 					},
 				],
 			}
 		)
 
-		if difference_entry := get_difference_row(inv):
-			jv.append("accounts", difference_entry)
-
 		jv.flags.ignore_mandatory = True
+		jv.flags.skip_remarks_creation = True
+		jv.flags.ignore_exchange_rate = True
+		jv.is_system_generated = True
+		jv.remark = None
 		jv.submit()
+
+		if inv.difference_amount != 0:
+			# make gain/loss journal
+			if inv.party_type == "Customer":
+				dr_or_cr = "credit" if inv.difference_amount < 0 else "debit"
+			else:
+				dr_or_cr = "debit" if inv.difference_amount < 0 else "credit"
+
+			reverse_dr_or_cr = "debit" if dr_or_cr == "credit" else "credit"
+
+			create_gain_loss_journal(
+				company,
+				inv.party_type,
+				inv.party,
+				inv.account,
+				inv.difference_account,
+				inv.difference_amount,
+				dr_or_cr,
+				reverse_dr_or_cr,
+				inv.voucher_type,
+				inv.voucher_no,
+				None,
+				inv.against_voucher_type,
+				inv.against_voucher,
+				None,
+			)
