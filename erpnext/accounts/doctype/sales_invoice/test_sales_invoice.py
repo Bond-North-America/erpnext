@@ -782,6 +782,28 @@ class TestSalesInvoice(FrappeTestCase):
 		w = self.make()
 		self.assertEqual(w.outstanding_amount, w.base_rounded_total)
 
+	def test_rounded_total_with_cash_discount(self):
+		si = frappe.copy_doc(test_records[2])
+
+		item = copy.deepcopy(si.get("items")[0])
+		item.update(
+			{
+				"qty": 1,
+				"rate": 14960.66,
+			}
+		)
+
+		si.set("items", [item])
+		si.set("taxes", [])
+		si.apply_discount_on = "Grand Total"
+		si.is_cash_or_non_trade_discount = 1
+		si.discount_amount = 1
+		si.insert()
+
+		self.assertEqual(si.grand_total, 14959.66)
+		self.assertEqual(si.rounded_total, 14960)
+		self.assertEqual(si.rounding_adjustment, 0.34)
+
 	def test_payment(self):
 		w = self.make()
 
@@ -2497,12 +2519,6 @@ class TestSalesInvoice(FrappeTestCase):
 			"stock_received_but_not_billed",
 			"Stock Received But Not Billed - _TC1",
 		)
-		frappe.db.set_value(
-			"Company",
-			"_Test Company 1",
-			"expenses_included_in_valuation",
-			"Expenses Included In Valuation - _TC1",
-		)
 
 		# begin test
 		si = create_sales_invoice(
@@ -2540,7 +2556,7 @@ class TestSalesInvoice(FrappeTestCase):
 
 		# tear down
 		frappe.local.enable_perpetual_inventory["_Test Company 1"] = old_perpetual_inventory
-		frappe.db.set_value("Stock Settings", None, "allow_negative_stock", old_negative_stock)
+		frappe.db.set_single_value("Stock Settings", "allow_negative_stock", old_negative_stock)
 
 	def test_sle_for_target_warehouse(self):
 		se = make_stock_entry(
@@ -2552,6 +2568,7 @@ class TestSalesInvoice(FrappeTestCase):
 		)
 
 		si = frappe.copy_doc(test_records[0])
+		si.customer = "_Test Internal Customer 3"
 		si.update_stock = 1
 		si.set_warehouse = "Finished Goods - _TC"
 		si.set_target_warehouse = "Stores - _TC"
@@ -3578,6 +3595,20 @@ def create_internal_parties():
 		represents_company="_Test Company with perpetual inventory",
 		allowed_to_interact_with="_Test Company with perpetual inventory",
 	)
+
+	create_internal_customer(
+		customer_name="_Test Internal Customer 3",
+		represents_company="_Test Company",
+		allowed_to_interact_with="_Test Company",
+	)
+
+	account = create_account(
+		account_name="Unrealized Profit",
+		parent_account="Current Liabilities - _TC",
+		company="_Test Company",
+	)
+
+	frappe.db.set_value("Company", "_Test Company", "unrealized_profit_loss_account", account)
 
 	create_internal_supplier(
 		supplier_name="_Test Internal Supplier",
