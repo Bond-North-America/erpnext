@@ -131,6 +131,18 @@ class PurchaseInvoice(BuyingController):
 		self.reset_default_field_value("set_warehouse", "items", "warehouse")
 		self.reset_default_field_value("rejected_warehouse", "items", "rejected_warehouse")
 		self.reset_default_field_value("set_from_warehouse", "items", "from_warehouse")
+		self.set_percentage_received()
+
+	def set_percentage_received(self):
+		total_billed_qty = 0.0
+		total_received_qty = 0.0
+		for row in self.items:
+			if row.purchase_receipt and row.pr_detail and row.received_qty:
+				total_billed_qty += row.qty
+				total_received_qty += row.received_qty
+
+		if total_billed_qty and total_received_qty:
+			self.per_received = total_received_qty / total_billed_qty * 100
 
 	def validate_release_date(self):
 		if self.release_date and getdate(nowdate()) >= getdate(self.release_date):
@@ -659,9 +671,7 @@ class PurchaseInvoice(BuyingController):
 						"credit_in_account_currency": base_grand_total
 						if self.party_account_currency == self.company_currency
 						else grand_total,
-						"against_voucher": self.return_against
-						if cint(self.is_return) and self.return_against
-						else self.name,
+						"against_voucher": self.name,
 						"against_voucher_type": self.doctype,
 						"project": self.project,
 						"cost_center": self.cost_center,
@@ -925,17 +935,6 @@ class PurchaseInvoice(BuyingController):
 										item=item,
 									)
 								)
-
-						# update gross amount of asset bought through this document
-						assets = frappe.db.get_all(
-							"Asset", filters={"purchase_invoice": self.name, "item_code": item.item_code}
-						)
-						for asset in assets:
-							frappe.db.set_value("Asset", asset.name, "gross_purchase_amount", flt(item.valuation_rate))
-							frappe.db.set_value(
-								"Asset", asset.name, "purchase_receipt_amount", flt(item.valuation_rate)
-							)
-
 			if (
 				self.auto_accounting_for_stock
 				and self.is_opening == "No"
@@ -975,17 +974,24 @@ class PurchaseInvoice(BuyingController):
 							item.item_tax_amount, item.precision("item_tax_amount")
 						)
 
+			if item.is_fixed_asset and item.landed_cost_voucher_amount:
+				self.update_gross_purchase_amount_for_linked_assets(item)
+
+	def update_gross_purchase_amount_for_linked_assets(self, item):
 		assets = frappe.db.get_all(
 			"Asset",
 			filters={"purchase_invoice": self.name, "item_code": item.item_code},
 			fields=["name", "asset_quantity"],
 		)
 		for asset in assets:
+			purchase_amount = flt(item.valuation_rate) * asset.asset_quantity
 			frappe.db.set_value(
-				"Asset", asset.name, "gross_purchase_amount", flt(item.valuation_rate) * asset.asset_quantity
-			)
-			frappe.db.set_value(
-				"Asset", asset.name, "purchase_receipt_amount", flt(item.valuation_rate) * asset.asset_quantity
+				"Asset",
+				asset.name,
+				{
+					"gross_purchase_amount": purchase_amount,
+					"purchase_receipt_amount": purchase_amount,
+				},
 			)
 
 	def make_stock_adjustment_entry(
@@ -1532,12 +1538,8 @@ class PurchaseInvoice(BuyingController):
 				elif outstanding_amount > 0 and getdate(self.due_date) >= getdate():
 					self.status = "Unpaid"
 				# Check if outstanding amount is 0 due to debit note issued against invoice
-				elif (
-					outstanding_amount <= 0
-					and self.is_return == 0
-					and frappe.db.get_value(
-						"Purchase Invoice", {"is_return": 1, "return_against": self.name, "docstatus": 1}
-					)
+				elif self.is_return == 0 and frappe.db.get_value(
+					"Purchase Invoice", {"is_return": 1, "return_against": self.name, "docstatus": 1}
 				):
 					self.status = "Debit Note Issued"
 				elif self.is_return == 1:
