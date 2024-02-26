@@ -144,6 +144,11 @@ frappe.ui.form.on("Opportunity", {
 
 	currency: function(frm) {
 		let company_currency = erpnext.get_currency(frm.doc.company);
+		function set_conversion_rate(rate){
+			if(flt(frm.doc.conversion_rate != flt(rate))){
+				frm.set_value('conversion_rate', flt(rate));
+			}
+		}
 		if (company_currency != frm.doc.company) {
 			frappe.call({
 				method: "erpnext.setup.utils.get_exchange_rate",
@@ -153,14 +158,14 @@ frappe.ui.form.on("Opportunity", {
 				},
 				callback: function(r) {
 					if (r.message) {
-						frm.set_value('conversion_rate', flt(r.message));
+						set_conversion_rate(r.message);
 						frm.set_df_property('conversion_rate', 'description', '1 ' + frm.doc.currency
 						+ ' = [?] ' + company_currency);
 					}
 				}
 			});
 		} else {
-			frm.set_value('conversion_rate', 1.0);
+			set_conversion_rate(r.message);
 			frm.set_df_property('conversion_rate', 'hidden', 1);
 			frm.set_df_property('conversion_rate', 'description', '');
 		}
