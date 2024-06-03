@@ -9,9 +9,9 @@ from frappe.utils import cstr, flt
 from frappe.utils.xlsxutils import handle_html
 
 from erpnext.accounts.report.sales_register.sales_register import get_mode_of_payments
+from erpnext.accounts.report.utils import get_query_columns, get_values_for_columns
 from erpnext.selling.report.item_wise_sales_history.item_wise_sales_history import (
 	get_customer_details,
-	get_item_details,
 )
 
 
@@ -19,21 +19,26 @@ def execute(filters=None):
 	return _execute(filters)
 
 
-def _execute(
-	filters=None,
-	additional_table_columns=None,
-	additional_query_columns=None,
-	additional_conditions=None,
-):
+def _execute(filters=None, additional_table_columns=None, additional_conditions=None):
 	if not filters:
 		filters = {}
 	columns = get_columns(additional_table_columns, filters)
 
 	company_currency = frappe.get_cached_value("Company", filters.get("company"), "default_currency")
 
-	item_list = get_items(filters, additional_query_columns, additional_conditions)
+	item_list = get_items(filters, get_query_columns(additional_table_columns), additional_conditions)
 	if item_list:
 		itemised_tax, tax_columns = get_tax_accounts(item_list, columns, company_currency)
+
+		scrubbed_tax_fields = {}
+
+		for tax in tax_columns:
+			scrubbed_tax_fields.update(
+				{
+					tax + " Rate": frappe.scrub(tax + " Rate"),
+					tax + " Amount": frappe.scrub(tax + " Amount"),
+				}
+			)
 
 	mode_of_payments = get_mode_of_payments(set(d.parent for d in item_list))
 	so_dn_map = get_delivery_notes_against_sales_order(item_list)
@@ -47,11 +52,9 @@ def _execute(
 		grand_total = get_grand_total(filters, "Sales Invoice")
 
 	customer_details = get_customer_details()
-	item_details = get_item_details()
 
 	for d in item_list:
 		customer_record = customer_details.get(d.customer)
-		item_record = item_details.get(d.item_code)
 
 		delivery_note = None
 		if d.delivery_note:
@@ -64,37 +67,29 @@ def _execute(
 
 		row = {
 			"item_code": d.item_code,
-			"item_name": item_record.item_name if item_record else d.item_name,
-			"item_group": item_record.item_group if item_record else d.item_group,
+			"item_name": d.si_item_name if d.si_item_name else d.i_item_name,
+			"item_group": d.si_item_group if d.si_item_group else d.i_item_group,
 			"description": d.description,
 			"invoice": d.parent,
 			"posting_date": d.posting_date,
 			"customer": d.customer,
 			"customer_name": customer_record.customer_name,
 			"customer_group": customer_record.customer_group,
+			**get_values_for_columns(additional_table_columns, d),
+			"debit_to": d.debit_to,
+			"mode_of_payment": ", ".join(mode_of_payments.get(d.parent, [])),
+			"territory": d.territory,
+			"project": d.project,
+			"company": d.company,
+			"sales_order": d.sales_order,
+			"delivery_note": d.delivery_note,
+			"income_account": d.unrealized_profit_loss_account
+			if d.is_internal_customer == 1
+			else d.income_account,
+			"cost_center": d.cost_center,
+			"stock_qty": d.stock_qty,
+			"stock_uom": d.stock_uom,
 		}
-
-		if additional_query_columns:
-			for col in additional_query_columns:
-				row.update({col: d.get(col)})
-
-		row.update(
-			{
-				"debit_to": d.debit_to,
-				"mode_of_payment": ", ".join(mode_of_payments.get(d.parent, [])),
-				"territory": d.territory,
-				"project": d.project,
-				"company": d.company,
-				"sales_order": d.sales_order,
-				"delivery_note": d.delivery_note,
-				"income_account": d.unrealized_profit_loss_account
-				if d.is_internal_customer == 1
-				else d.income_account,
-				"cost_center": d.cost_center,
-				"stock_qty": d.stock_qty,
-				"stock_uom": d.stock_uom,
-			}
-		)
 
 		if d.stock_uom != d.uom and d.stock_qty:
 			row.update({"rate": (d.base_net_rate * d.qty) / d.stock_qty, "amount": d.base_net_amount})
@@ -107,8 +102,8 @@ def _execute(
 			item_tax = itemised_tax.get(d.name, {}).get(tax, {})
 			row.update(
 				{
-					frappe.scrub(tax + " Rate"): item_tax.get("tax_rate", 0),
-					frappe.scrub(tax + " Amount"): item_tax.get("tax_amount", 0),
+					scrubbed_tax_fields[tax + " Rate"]: item_tax.get("tax_rate", 0),
+					scrubbed_tax_fields[tax + " Amount"]: item_tax.get("tax_amount", 0),
 				}
 			)
 			if item_tax.get("is_other_charges"):
@@ -222,7 +217,12 @@ def get_columns(additional_table_columns, filters):
 					"options": "Customer",
 					"width": 120,
 				},
-				{"label": _("Customer Name"), "fieldname": "customer_name", "fieldtype": "Data", "width": 120},
+				{
+					"label": _("Customer Name"),
+					"fieldname": "customer_name",
+					"fieldtype": "Data",
+					"width": 120,
+				},
 			]
 		)
 
@@ -337,7 +337,7 @@ def get_conditions(filters, additional_conditions=None):
 	conditions = ""
 
 	for opts in (
-		("company", " and company=%(company)s"),
+		("company", " and `tabSales Invoice`.company=%(company)s"),
 		("customer", " and `tabSales Invoice`.customer = %(customer)s"),
 		("item_code", " and `tabSales Invoice Item`.item_code = %(item_code)s"),
 		("from_date", " and `tabSales Invoice`.posting_date>=%(from_date)s"),
@@ -355,7 +355,13 @@ def get_conditions(filters, additional_conditions=None):
 				and ifnull(`tabSales Invoice Payment`.mode_of_payment, '') = %(mode_of_payment)s)"""
 
 	if filters.get("warehouse"):
-		conditions += """and ifnull(`tabSales Invoice Item`.warehouse, '') = %(warehouse)s"""
+		if frappe.db.get_value("Warehouse", filters.get("warehouse"), "is_group"):
+			lft, rgt = frappe.db.get_all(
+				"Warehouse", filters={"name": filters.get("warehouse")}, fields=["lft", "rgt"], as_list=True
+			)[0]
+			conditions += f"and ifnull(`tabSales Invoice Item`.warehouse, '') in (select name from `tabWarehouse` where lft > {lft} and rgt < {rgt}) "
+		else:
+			conditions += """and ifnull(`tabSales Invoice Item`.warehouse, '') = %(warehouse)s"""
 
 	if filters.get("brand"):
 		conditions += """and ifnull(`tabSales Invoice Item`.brand, '') = %(brand)s"""
@@ -364,9 +370,7 @@ def get_conditions(filters, additional_conditions=None):
 		conditions += """and ifnull(`tabSales Invoice Item`.item_group, '') = %(item_group)s"""
 
 	if not filters.get("group_by"):
-		conditions += (
-			"ORDER BY `tabSales Invoice`.posting_date desc, `tabSales Invoice Item`.item_group desc"
-		)
+		conditions += "ORDER BY `tabSales Invoice`.posting_date desc, `tabSales Invoice Item`.item_group desc"
 	else:
 		conditions += get_group_by_conditions(filters, "Sales Invoice")
 
@@ -375,23 +379,19 @@ def get_conditions(filters, additional_conditions=None):
 
 def get_group_by_conditions(filters, doctype):
 	if filters.get("group_by") == "Invoice":
-		return "ORDER BY `tab{0} Item`.parent desc".format(doctype)
+		return f"ORDER BY `tab{doctype} Item`.parent desc"
 	elif filters.get("group_by") == "Item":
-		return "ORDER BY `tab{0} Item`.`item_code`".format(doctype)
+		return f"ORDER BY `tab{doctype} Item`.`item_code`"
 	elif filters.get("group_by") == "Item Group":
-		return "ORDER BY `tab{0} Item`.{1}".format(doctype, frappe.scrub(filters.get("group_by")))
+		return "ORDER BY `tab{} Item`.{}".format(doctype, frappe.scrub(filters.get("group_by")))
 	elif filters.get("group_by") in ("Customer", "Customer Group", "Territory", "Supplier"):
-		return "ORDER BY `tab{0}`.{1}".format(doctype, frappe.scrub(filters.get("group_by")))
+		return "ORDER BY `tab{}`.{}".format(doctype, frappe.scrub(filters.get("group_by")))
 
 
 def get_items(filters, additional_query_columns, additional_conditions=None):
 	conditions = get_conditions(filters, additional_conditions)
-
 	if additional_query_columns:
-		additional_query_columns = ", " + ", ".join(additional_query_columns)
-	else:
-		additional_query_columns = ""
-
+		additional_query_columns = "," + ",".join(additional_query_columns)
 	return frappe.db.sql(
 		"""
 		select
@@ -404,18 +404,19 @@ def get_items(filters, additional_query_columns, additional_conditions=None):
 			`tabSales Invoice Item`.project,
 			`tabSales Invoice Item`.item_code, `tabSales Invoice Item`.description,
 			`tabSales Invoice Item`.`item_name`, `tabSales Invoice Item`.`item_group`,
+			`tabSales Invoice Item`.`item_name` as si_item_name, `tabSales Invoice Item`.`item_group` as si_item_group,
+			`tabItem`.`item_name` as i_item_name, `tabItem`.`item_group` as i_item_group,
 			`tabSales Invoice Item`.sales_order, `tabSales Invoice Item`.delivery_note,
 			`tabSales Invoice Item`.income_account, `tabSales Invoice Item`.cost_center,
 			`tabSales Invoice Item`.stock_qty, `tabSales Invoice Item`.stock_uom,
 			`tabSales Invoice Item`.base_net_rate, `tabSales Invoice Item`.base_net_amount,
 			`tabSales Invoice`.customer_name, `tabSales Invoice`.customer_group, `tabSales Invoice Item`.so_detail,
-			`tabSales Invoice`.update_stock, `tabSales Invoice Item`.uom, `tabSales Invoice Item`.qty {0}
-		from `tabSales Invoice`, `tabSales Invoice Item`
-		where `tabSales Invoice`.name = `tabSales Invoice Item`.parent
-			and `tabSales Invoice`.docstatus = 1 {1}
-		""".format(
-			additional_query_columns or "", conditions
-		),
+			`tabSales Invoice`.update_stock, `tabSales Invoice Item`.uom, `tabSales Invoice Item`.qty {}
+		from `tabSales Invoice`, `tabSales Invoice Item`, `tabItem`
+		where `tabSales Invoice`.name = `tabSales Invoice Item`.parent and
+			`tabItem`.name = `tabSales Invoice Item`.`item_code` and
+			`tabSales Invoice`.docstatus = 1 {}
+		""".format(additional_query_columns, conditions),
 		filters,
 		as_dict=1,
 	)  # nosec
@@ -445,20 +446,15 @@ def get_delivery_notes_against_sales_order(item_list):
 
 
 def get_grand_total(filters, doctype):
-
 	return frappe.db.sql(
-		""" SELECT
-		SUM(`tab{0}`.base_grand_total)
-		FROM `tab{0}`
-		WHERE `tab{0}`.docstatus = 1
+		f""" SELECT
+		SUM(`tab{doctype}`.base_grand_total)
+		FROM `tab{doctype}`
+		WHERE `tab{doctype}`.docstatus = 1
 		and posting_date between %s and %s
-	""".format(
-			doctype
-		),
+	""",
 		(filters.get("from_date"), filters.get("to_date")),
-	)[0][
-		0
-	]  # nosec
+	)[0][0]  # nosec
 
 
 def get_tax_accounts(
@@ -477,9 +473,7 @@ def get_tax_accounts(
 	add_deduct_tax = "charge_type"
 
 	tax_amount_precision = (
-		get_field_precision(
-			frappe.get_meta(tax_doctype).get_field("tax_amount"), currency=company_currency
-		)
+		get_field_precision(frappe.get_meta(tax_doctype).get_field("tax_amount"), currency=company_currency)
 		or 2
 	)
 
@@ -489,11 +483,13 @@ def get_tax_accounts(
 
 	conditions = ""
 	if doctype == "Purchase Invoice":
-		conditions = " and category in ('Total', 'Valuation and Total') and base_tax_amount_after_discount_amount != 0"
+		conditions = (
+			" and category in ('Total', 'Valuation and Total') and base_tax_amount_after_discount_amount != 0"
+		)
 		add_deduct_tax = "add_deduct_tax"
 
 	tax_details = frappe.db.sql(
-		"""
+		f"""
 		select
 			name, parent, description, item_wise_tax_detail, account_head,
 			charge_type, {add_deduct_tax}, base_tax_amount_after_discount_amount
@@ -504,11 +500,9 @@ def get_tax_accounts(
 			and parent in (%s)
 			%s
 		order by description
-	""".format(
-			add_deduct_tax=add_deduct_tax
-		)
+	"""
 		% (tax_doctype, "%s", ", ".join(["%s"] * len(invoice_item_row)), conditions),
-		tuple([doctype] + list(invoice_item_row)),
+		tuple([doctype, *list(invoice_item_row)]),
 	)
 
 	account_doctype = frappe.qb.DocType("Account")
@@ -516,13 +510,13 @@ def get_tax_accounts(
 	query = (
 		frappe.qb.from_(account_doctype)
 		.select(account_doctype.name)
-		.where((account_doctype.account_type == "Tax"))
+		.where(account_doctype.account_type == "Tax")
 	)
 
 	tax_accounts = query.run()
 
 	for (
-		name,
+		_name,
 		parent,
 		description,
 		item_wise_tax_detail,
@@ -583,7 +577,9 @@ def get_tax_accounts(
 				itemised_tax.setdefault(d.name, {})[description] = frappe._dict(
 					{
 						"tax_rate": "NA",
-						"tax_amount": flt((tax_amount * d.base_net_amount) / d.base_net_total, tax_amount_precision),
+						"tax_amount": flt(
+							(tax_amount * d.base_net_amount) / d.base_net_total, tax_amount_precision
+						),
 					}
 				)
 

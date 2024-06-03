@@ -145,16 +145,6 @@ erpnext.selling.SellingController = class SellingController extends erpnext.Tran
 		this.apply_discount_on_item(doc, cdt, cdn, 'discount_amount');
 	}
 
-	apply_discount_on_item(doc, cdt, cdn, field) {
-		var item = frappe.get_doc(cdt, cdn);
-		if(!item.price_list_rate) {
-			item[field] = 0.0;
-		} else {
-			this.price_list_rate(doc, cdt, cdn);
-		}
-		this.set_gross_profit(item);
-	}
-
 	commission_rate() {
 		this.calculate_commission();
 	}
@@ -208,6 +198,10 @@ erpnext.selling.SellingController = class SellingController extends erpnext.Tran
 
 		if (item.serial_no && !item.batch_no) {
 			item.serial_no = null;
+		}
+
+		if (doc.docstatus === 0 && doc.is_return && !doc.return_against) {
+			item.incoming_rate = 0.0;
 		}
 
 		var has_batch_no;
@@ -437,6 +431,11 @@ erpnext.selling.SellingController = class SellingController extends erpnext.Tran
 				}
 			})
 		}
+	}
+
+	coupon_code() {
+		this.frm.set_value("discount_amount", 0);
+		this.frm.set_value("additional_discount_percentage", 0);
 	}
 };
 
