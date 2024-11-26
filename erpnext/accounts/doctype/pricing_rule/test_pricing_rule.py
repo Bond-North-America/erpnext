@@ -5,6 +5,7 @@
 import unittest
 
 import frappe
+from frappe.tests.utils import FrappeTestCase, change_settings
 
 from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import make_purchase_invoice
 from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_sales_invoice
@@ -14,7 +15,7 @@ from erpnext.stock.doctype.item.test_item import make_item
 from erpnext.stock.get_item_details import get_item_details
 
 
-class TestPricingRule(unittest.TestCase):
+class TestPricingRule(FrappeTestCase):
 	def setUp(self):
 		delete_existing_pricing_rules()
 		setup_pricing_rule_data()
@@ -979,6 +980,12 @@ class TestPricingRule(unittest.TestCase):
 		self.assertEqual(so.items[1].is_free_item, 1)
 		self.assertEqual(so.items[1].item_code, "_Test Item")
 		self.assertEqual(so.items[1].qty, 3)
+
+		so = make_sales_order(item_code="_Test Item", qty=5, do_not_submit=1)
+		so.items[0].qty = 1
+		del so.items[-1]
+		so.save()
+		self.assertEqual(len(so.items), 1)
 
 	def test_apply_multiple_pricing_rules_for_discount_percentage_and_amount(self):
 		frappe.delete_doc_if_exists("Pricing Rule", "_Test Pricing Rule 1")
