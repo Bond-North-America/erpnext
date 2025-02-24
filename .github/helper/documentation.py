@@ -60,6 +60,7 @@ if __name__ == "__main__":
 =======
 DOCUMENTATION_DOMAINS = [
 	"docs.erpnext.com",
+	"docs.frappe.io",
 	"frappeframework.com",
 ]
 

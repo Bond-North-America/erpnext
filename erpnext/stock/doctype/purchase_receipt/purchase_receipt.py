@@ -907,7 +907,7 @@ def update_billing_percentage(pr_doc, update_modified=True, adjust_incoming_rate
 
 		if adjust_incoming_rate:
 			adjusted_amt = 0.0
-			if item.billed_amt and item.amount:
+			if item.billed_amt is not None and item.amount is not None:
 				adjusted_amt = flt(item.billed_amt) - flt(item.amount)
 
 			item.db_set("rate_difference_with_purchase_invoice", adjusted_amt, update_modified=False)
@@ -1165,26 +1165,25 @@ def get_item_account_wise_additional_cost(purchase_document):
 		for item in landed_cost_voucher_doc.items:
 			if item.receipt_document == purchase_document:
 				for account in landed_cost_voucher_doc.taxes:
+					exchange_rate = account.exchange_rate or 1
 					item_account_wise_cost.setdefault((item.item_code, item.purchase_receipt_item), {})
 					item_account_wise_cost[(item.item_code, item.purchase_receipt_item)].setdefault(
 						account.expense_account, {"amount": 0.0, "base_amount": 0.0}
 					)
 
-					if total_item_cost > 0:
-						item_account_wise_cost[(item.item_code, item.purchase_receipt_item)][
-							account.expense_account
-						]["amount"] += account.amount * item.get(based_on_field) / total_item_cost
+					item_row = item_account_wise_cost[(item.item_code, item.purchase_receipt_item)][
+						account.expense_account
+					]
 
-						item_account_wise_cost[(item.item_code, item.purchase_receipt_item)][
-							account.expense_account
-						]["base_amount"] += account.base_amount * item.get(based_on_field) / total_item_cost
+					if total_item_cost > 0:
+						item_row["amount"] += account.amount * item.get(based_on_field) / total_item_cost
+
+						item_row["base_amount"] += (
+							account.base_amount * item.get(based_on_field) / total_item_cost
+						)
 					else:
-						item_account_wise_cost[(item.item_code, item.purchase_receipt_item)][
-							account.expense_account
-						]["amount"] += item.applicable_charges
-						item_account_wise_cost[(item.item_code, item.purchase_receipt_item)][
-							account.expense_account
-						]["base_amount"] += item.applicable_charges
+						item_row["amount"] += item.applicable_charges / exchange_rate
+						item_row["base_amount"] += item.applicable_charges
 
 	return item_account_wise_cost
 

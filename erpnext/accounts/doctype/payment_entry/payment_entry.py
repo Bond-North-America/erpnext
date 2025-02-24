@@ -465,7 +465,7 @@ class PaymentEntry(AccountsController):
 			if d.reference_doctype not in valid_reference_doctypes:
 				frappe.throw(
 					_("Reference Doctype must be one of {0}").format(
-						comma_or(_(d) for d in valid_reference_doctypes)
+						comma_or([_(d) for d in valid_reference_doctypes])
 					)
 				)
 
@@ -1523,7 +1523,7 @@ class PaymentEntry(AccountsController):
 			if paid_amount > total_negative_outstanding:
 				if total_negative_outstanding == 0:
 					frappe.msgprint(
-						_("Cannot {0} from {2} without any negative outstanding invoice").format(
+						_("Cannot {0} from {1} without any negative outstanding invoice").format(
 							self.payment_type,
 							self.party_type,
 						)
@@ -2481,6 +2481,7 @@ def get_payment_entry(
 	pe.paid_amount = paid_amount
 	pe.received_amount = received_amount
 	pe.letter_head = doc.get("letter_head")
+	pe.bank_account = frappe.db.get_value("Bank Account", {"is_company_account": 1, "is_default": 1}, "name")
 
 	if dt in ["Purchase Order", "Sales Order", "Sales Invoice", "Purchase Invoice"]:
 		pe.project = doc.get("project") or reduce(
@@ -2605,6 +2606,7 @@ def get_open_payment_requests_for_references(references=None):
 		.where(Tuple(PR.reference_doctype, PR.reference_name).isin(list(refs)))
 		.where(PR.status != "Paid")
 		.where(PR.docstatus == 1)
+		.where(PR.outstanding_amount > 0)  # to avoid old PRs with 0 outstanding amount
 		.orderby(Coalesce(PR.transaction_date, PR.creation), order=frappe.qb.asc)
 	).run(as_dict=True)
 

@@ -642,7 +642,7 @@ def get_product_discount_rule(pricing_rule, item_details, args=None, doc=None):
 		if transaction_qty:
 			qty = flt(transaction_qty) * qty / pricing_rule.recurse_for
 			if pricing_rule.round_free_qty:
-				qty = math.floor(qty)
+				qty = (flt(transaction_qty) // pricing_rule.recurse_for) * (pricing_rule.free_qty or 1)
 
 	if not qty:
 		return
@@ -691,7 +691,10 @@ def apply_pricing_rule_for_free_items(doc, pricing_rule_args):
 				args.pop((item.item_code, item.pricing_rules))
 
 		for free_item in args.values():
-			doc.append("items", free_item)
+			if doc.is_new() or not frappe.get_value(
+				"Pricing Rule", free_item["pricing_rules"], "dont_enforce_free_item_qty"
+			):
+				doc.append("items", free_item)
 
 
 def get_pricing_rule_items(pr_doc, other_items=False) -> list:

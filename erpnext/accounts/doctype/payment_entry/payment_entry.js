@@ -165,6 +165,10 @@ frappe.ui.form.on('Payment Entry', {
 				filters: {
 					reference_doctype: row.reference_doctype,
 					reference_name: row.reference_name,
+					company: doc.company,
+					status: ["!=", "Paid"],
+					outstanding_amount: [">", 0], // for compatibility with old data
+					docstatus: 1,
 				},
 			};
 		});
@@ -1084,6 +1088,24 @@ frappe.ui.form.on('Payment Entry', {
 					if (r.message) {
 						if (!frm.doc.mode_of_payment) {
 							frm.set_value(field, r.message.account);
+						} else {
+							frappe.call({
+								method: "frappe.client.get_value",
+								args: {
+									doctype: "Mode of Payment Account",
+									filters: {
+										parent: frm.doc.mode_of_payment,
+										company: frm.doc.company,
+									},
+									fieldname: "default_account",
+									parent: "Mode of Payment",
+								},
+								callback: function (res) {
+									if (!res.message.default_account) {
+										frm.set_value(field, r.message.account);
+									}
+								},
+							});
 						}
 						frm.set_value('bank', r.message.bank);
 						frm.set_value('bank_account_no', r.message.bank_account_no);
