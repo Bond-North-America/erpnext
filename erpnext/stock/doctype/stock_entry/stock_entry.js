@@ -77,7 +77,7 @@ frappe.ui.form.on('Stock Entry', {
 			if(!item.item_code) {
 				frappe.throw(__("Please enter Item Code to get Batch Number"));
 			} else {
-				if (in_list(["Material Transfer for Manufacture", "Manufacture", "Repack", "Send to Subcontractor"], doc.purpose)) {
+				if (["Material Transfer for Manufacture", "Manufacture", "Repack", "Send to Subcontractor"].includes(doc.purpose)) {
 					var filters = {
 						'item_code': item.item_code,
 						'posting_date': frm.doc.posting_date || frappe.datetime.nowdate()
@@ -714,7 +714,17 @@ frappe.ui.form.on('Stock Entry', {
 	}
 });
 
+
 frappe.ui.form.on('Stock Entry Detail', {
+	set_basic_rate_manually(frm, cdt, cdn) {
+		let row = locals[cdt][cdn];
+		frm.fields_dict.items.grid.update_docfield_property(
+			"basic_rate",
+			"read_only",
+			row?.set_basic_rate_manually ? 0 : 1
+		);
+	},
+
 	qty: function(frm, cdt, cdn) {
 		frm.events.set_serial_no(frm, cdt, cdn, () => {
 			frm.events.set_basic_rate(frm, cdt, cdn);
@@ -793,7 +803,12 @@ frappe.ui.form.on('Stock Entry Detail', {
 						var d = locals[cdt][cdn];
 						$.each(r.message, function(k, v) {
 							if (v) {
-								frappe.model.set_value(cdt, cdn, k, v); // qty and it's subsequent fields weren't triggered
+								// set_value trigger barcode function and barcode set qty to 1 in stock_controller.js, to avoid this set value manually instead of set value.
+								if (k != "barcode") {
+									frappe.model.set_value(cdt, cdn, k, v); // qty and it's subsequent fields weren't triggered
+								} else {
+									d.barcode = v;
+								}
 							}
 						});
 						refresh_field("items");

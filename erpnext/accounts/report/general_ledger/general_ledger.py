@@ -209,6 +209,10 @@ def get_gl_entries(filters, accounting_dimensions):
 def get_conditions(filters):
 	conditions = []
 
+	ignore_is_opening = frappe.db.get_single_value(
+		"Accounts Settings", "ignore_is_opening_check_for_reporting"
+	)
+
 	if filters.get("account"):
 		filters.account = get_accounts_with_children(filters.account)
 		if filters.account:
@@ -234,6 +238,23 @@ def get_conditions(filters):
 		if err_journals:
 			filters.update({"voucher_no_not_in": [x[0] for x in err_journals]})
 
+	if filters.get("ignore_cr_dr_notes"):
+		system_generated_cr_dr_journals = frappe.db.get_all(
+			"Journal Entry",
+			filters={
+				"company": filters.get("company"),
+				"docstatus": 1,
+				"voucher_type": ("in", ["Credit Note", "Debit Note"]),
+				"is_system_generated": 1,
+			},
+			as_list=True,
+		)
+		if system_generated_cr_dr_journals:
+			vouchers_to_ignore = (filters.get("voucher_no_not_in") or []) + [
+				x[0] for x in system_generated_cr_dr_journals
+			]
+			filters.update({"voucher_no_not_in": vouchers_to_ignore})
+
 	if filters.get("voucher_no_not_in"):
 		conditions.append("voucher_no not in %(voucher_no_not_in)s")
 
@@ -251,9 +272,15 @@ def get_conditions(filters):
 		or filters.get("party")
 		or filters.get("group_by") in ["Group by Account", "Group by Party"]
 	):
-		conditions.append("(posting_date >=%(from_date)s or is_opening = 'Yes')")
+		if not ignore_is_opening:
+			conditions.append("(posting_date >=%(from_date)s or is_opening = 'Yes')")
+		else:
+			conditions.append("posting_date >=%(from_date)s")
 
-	conditions.append("(posting_date <=%(to_date)s or is_opening = 'Yes')")
+	if not ignore_is_opening:
+		conditions.append("(posting_date <=%(to_date)s or is_opening = 'Yes')")
+	else:
+		conditions.append("posting_date <=%(to_date)s")
 
 	if filters.get("project"):
 		conditions.append("project in %(project)s")
@@ -320,8 +347,16 @@ def get_accounts_with_children(accounts):
 	return list(set(all_accounts)) if all_accounts else None
 
 
+def set_bill_no(gl_entries):
+	inv_details = get_supplier_invoice_details()
+	for gl in gl_entries:
+		gl["bill_no"] = inv_details.get(gl.get("against_voucher"), "")
+
+
 def get_data_with_opening_closing(filters, account_details, accounting_dimensions, gl_entries):
 	data = []
+
+	set_bill_no(gl_entries)
 
 	gle_map = initialize_gle_map(gl_entries, filters)
 
@@ -496,7 +531,6 @@ def get_account_type_map(company):
 
 def get_result_as_list(data, filters):
 	balance, _balance_in_account_currency = 0, 0
-	inv_details = get_supplier_invoice_details()
 
 	for d in data:
 		if not d.get("posting_date"):
@@ -506,7 +540,6 @@ def get_result_as_list(data, filters):
 		d["balance"] = balance
 
 		d["account_currency"] = filters.account_currency
-		d["bill_no"] = inv_details.get(d.get("against_voucher"), "")
 
 	return data
 

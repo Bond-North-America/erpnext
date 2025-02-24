@@ -46,7 +46,7 @@ erpnext.PointOfSale.PastOrderSummary = class {
 
 	init_email_print_dialog() {
 		const email_dialog = new frappe.ui.Dialog({
-			title: "Email Receipt",
+			title: __("Email Receipt"),
 			fields: [
 				{ fieldname: "email_id", fieldtype: "Data", options: "Email", label: "Email ID" },
 				// {fieldname:'remarks', fieldtype:'Text', label:'Remarks (if any)'}
@@ -59,7 +59,7 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		this.email_dialog = email_dialog;
 
 		const print_dialog = new frappe.ui.Dialog({
-			title: "Print Receipt",
+			title: __("Print Receipt"),
 			fields: [{ fieldname: "print", fieldtype: "Data", label: "Print Preview" }],
 			primary_action: () => {
 				this.print_receipt();
@@ -73,7 +73,7 @@ erpnext.PointOfSale.PastOrderSummary = class {
 		const { status } = doc;
 		let indicator_color = "";
 
-		in_list(["Paid", "Consolidated"], status) && (indicator_color = "green");
+		["Paid", "Consolidated"].includes(status) && (indicator_color = "green");
 		status === "Draft" && (indicator_color = "red");
 		status === "Return" && (indicator_color = "grey");
 
@@ -112,7 +112,7 @@ erpnext.PointOfSale.PastOrderSummary = class {
 	get_discount_html(doc) {
 		if (doc.discount_amount) {
 			return `<div class="summary-row-wrapper">
-						<div>Discount (${doc.additional_discount_percentage} %)</div>
+						<div>${__("Discount")} (${doc.additional_discount_percentage} %)</div>
 						<div>${format_currency(doc.discount_amount, doc.currency)}</div>
 					</div>`;
 		} else {

@@ -78,7 +78,7 @@ frappe.ui.form.on("Asset", {
 		frm.events.make_schedules_editable(frm);
 
 		if (frm.doc.docstatus == 1) {
-			if (in_list(["Submitted", "Partially Depreciated", "Fully Depreciated"], frm.doc.status)) {
+			if (["Submitted", "Partially Depreciated", "Fully Depreciated"].includes(frm.doc.status)) {
 				frm.add_custom_button(
 					__("Transfer Asset"),
 					function () {
@@ -202,7 +202,7 @@ frappe.ui.form.on("Asset", {
 			<div class="row">
 				<div class="col-xs-12 col-sm-6">
 					<span class="indicator whitespace-nowrap red">
-						<span>Failed to post depreciation entries</span>
+						<span>${__("Failed to post depreciation entries")}</span>
 					</span>
 				</div>
 			</div>`;
@@ -280,7 +280,7 @@ frappe.ui.form.on("Asset", {
 				if (v.journal_entry) {
 					asset_values.push(asset_value);
 				} else {
-					if (in_list(["Scrapped", "Sold"], frm.doc.status)) {
+					if (["Scrapped", "Sold"].includes(frm.doc.status)) {
 						asset_values.push(null);
 					} else {
 						asset_values.push(asset_value);
@@ -312,13 +312,13 @@ frappe.ui.form.on("Asset", {
 			});
 		}
 
-		if (in_list(["Scrapped", "Sold"], frm.doc.status)) {
+		if (["Scrapped", "Sold"].includes(frm.doc.status)) {
 			x_intervals.push(frappe.format(frm.doc.disposal_date, { fieldtype: "Date" }));
 			asset_values.push(0);
 		}
 
 		frm.dashboard.render_graph({
-			title: "Asset Value",
+			title: __("Asset Value"),
 			data: {
 				labels: x_intervals,
 				datasets: [

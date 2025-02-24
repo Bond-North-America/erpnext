@@ -6,7 +6,7 @@ from collections import OrderedDict, defaultdict
 from itertools import groupby
 
 import frappe
-from frappe import _
+from frappe import _, bold
 from frappe.model.document import Document
 from frappe.model.mapper import map_child_doc
 from frappe.query_builder import Case
@@ -26,6 +26,8 @@ from erpnext.stock.get_item_details import get_conversion_factor
 class PickList(Document):
 	def validate(self):
 		self.validate_for_qty()
+		self.validate_stock_qty()
+		self.check_serial_no_status()
 
 	def before_save(self):
 		self.update_status()
@@ -34,6 +36,70 @@ class PickList(Document):
 
 		if self.get("locations"):
 			self.validate_sales_order_percentage()
+
+	def validate_stock_qty(self):
+		from erpnext.stock.doctype.batch.batch import get_batch_qty
+
+		for row in self.get("locations"):
+			if not row.picked_qty:
+				continue
+
+			if row.batch_no and row.picked_qty:
+				batch_qty = get_batch_qty(row.batch_no, row.warehouse, row.item_code)
+
+				if row.picked_qty > batch_qty:
+					frappe.throw(
+						_(
+							"At Row #{0}: The picked quantity {1} for the item {2} is greater than available stock {3} for the batch {4} in the warehouse {5}. Please restock the item."
+						).format(
+							row.idx,
+							row.picked_qty,
+							row.item_code,
+							batch_qty,
+							row.batch_no,
+							bold(row.warehouse),
+						),
+						title=_("Insufficient Stock"),
+					)
+
+				continue
+
+			bin_qty = frappe.db.get_value(
+				"Bin",
+				{"item_code": row.item_code, "warehouse": row.warehouse},
+				"actual_qty",
+			)
+
+			if row.picked_qty > flt(bin_qty):
+				frappe.throw(
+					_(
+						"At Row #{0}: The picked quantity {1} for the item {2} is greater than available stock {3} in the warehouse {4}."
+					).format(row.idx, row.picked_qty, bold(row.item_code), bin_qty, bold(row.warehouse)),
+					title=_("Insufficient Stock"),
+				)
+
+	def check_serial_no_status(self):
+		from erpnext.stock.doctype.serial_no.serial_no import get_serial_nos
+
+		for row in self.get("locations"):
+			if not row.serial_no:
+				continue
+
+			picked_serial_nos = get_serial_nos(row.serial_no)
+			validated_serial_nos = frappe.get_all(
+				"Serial No",
+				filters={"name": ("in", picked_serial_nos), "warehouse": row.warehouse},
+				pluck="name",
+			)
+
+			incorrect_serial_nos = set(picked_serial_nos) - set(validated_serial_nos)
+			if incorrect_serial_nos:
+				frappe.throw(
+					_("The Serial No at Row #{0}: {1} is not available in warehouse {2}.").format(
+						row.idx, ", ".join(incorrect_serial_nos), row.warehouse
+					),
+					title=_("Incorrect Warehouse"),
+				)
 
 	def validate_sales_order_percentage(self):
 		# set percentage picked in SO
@@ -196,7 +262,14 @@ class PickList(Document):
 		locations_replica = self.get("locations")
 
 		# reset
-		self.delete_key("locations")
+		reset_rows = []
+		for row in self.get("locations"):
+			if not row.picked_qty:
+				reset_rows.append(row)
+
+		for row in reset_rows:
+			self.remove(row)
+
 		updated_locations = frappe._dict()
 		for item_doc in items:
 			item_code = item_doc.item_code
@@ -266,6 +339,9 @@ class PickList(Document):
 		# aggregate qty for same item
 		item_map = OrderedDict()
 		for item in locations:
+			if item.picked_qty:
+				continue
+
 			if not item.item_code:
 				frappe.throw(f"Row #{item.idx}: Item Code is Mandatory")
 			if not cint(
@@ -780,7 +856,8 @@ def create_delivery_note(source_name, target_doc=None):
 				)
 			)
 
-	for customer, rows in groupby(sales_orders, key=lambda so: so["customer"]):
+	group_key = lambda so: so["customer"]  # noqa
+	for customer, rows in groupby(sorted(sales_orders, key=group_key), key=group_key):
 		sales_dict[customer] = {row.sales_order for row in rows}
 
 	if sales_dict:
@@ -924,6 +1001,7 @@ def create_stock_entry(pick_list):
 	stock_entry = frappe.new_doc("Stock Entry")
 	stock_entry.pick_list = pick_list.get("name")
 	stock_entry.purpose = pick_list.get("purpose")
+	stock_entry.company = pick_list.get("company")
 	stock_entry.set_stock_entry_type()
 
 	if pick_list.get("work_order"):

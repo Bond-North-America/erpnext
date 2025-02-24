@@ -27,7 +27,7 @@ class RepostAccountingLedger(Document):
 			latest_pcv = (
 				frappe.db.get_all(
 					"Period Closing Voucher",
-					filters={"company": self.company},
+					filters={"company": self.company, "docstatus": 1},
 					order_by="posting_date desc",
 					pluck="posting_date",
 					limit=1,
@@ -149,6 +149,10 @@ def start_repost(account_repost_doc=str) -> None:
 						doc.make_gl_entries_on_cancel()
 
 					doc.docstatus = 1
+					if doc.doctype == "Sales Invoice":
+						doc.force_set_against_income_account()
+					else:
+						doc.force_set_against_expense_account()
 					doc.make_gl_entries()
 
 				elif doc.doctype in ["Payment Entry", "Journal Entry", "Expense Claim"]:

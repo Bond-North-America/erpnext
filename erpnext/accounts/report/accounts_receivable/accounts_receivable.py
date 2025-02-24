@@ -112,6 +112,25 @@ class ReceivablePayableReport:
 
 		self.build_data()
 
+	def build_voucher_dict(self, ple):
+		return frappe._dict(
+			voucher_type=ple.voucher_type,
+			voucher_no=ple.voucher_no,
+			party=ple.party,
+			party_account=ple.account,
+			posting_date=ple.posting_date,
+			account_currency=ple.account_currency,
+			remarks=ple.remarks,
+			invoiced=0.0,
+			paid=0.0,
+			credit_note=0.0,
+			outstanding=0.0,
+			invoiced_in_account_currency=0.0,
+			paid_in_account_currency=0.0,
+			credit_note_in_account_currency=0.0,
+			outstanding_in_account_currency=0.0,
+		)
+
 	def init_voucher_balance(self):
 		# build all keys, since we want to exclude vouchers beyond the report date
 		for ple in self.ple_entries:
@@ -123,23 +142,11 @@ class ReceivablePayableReport:
 				key = (ple.account, ple.voucher_type, ple.voucher_no, ple.party)
 
 			if key not in self.voucher_balance:
-				self.voucher_balance[key] = frappe._dict(
-					voucher_type=ple.voucher_type,
-					voucher_no=ple.voucher_no,
-					party=ple.party,
-					party_account=ple.account,
-					posting_date=ple.posting_date,
-					account_currency=ple.account_currency,
-					remarks=ple.remarks,
-					invoiced=0.0,
-					paid=0.0,
-					credit_note=0.0,
-					outstanding=0.0,
-					invoiced_in_account_currency=0.0,
-					paid_in_account_currency=0.0,
-					credit_note_in_account_currency=0.0,
-					outstanding_in_account_currency=0.0,
-				)
+				self.voucher_balance[key] = self.build_voucher_dict(ple)
+
+			if ple.voucher_type == ple.against_voucher_type and ple.voucher_no == ple.against_voucher_no:
+				self.voucher_balance[key].cost_center = ple.cost_center
+
 			self.get_invoices(ple)
 
 			if self.filters.get("group_by_party"):
@@ -207,6 +214,18 @@ class ReceivablePayableReport:
 
 		row = self.voucher_balance.get(key)
 
+		# Build and use a separate row for Employee Advances.
+		# This allows Payments or Journals made against Emp Advance to be processed.
+		if (
+			not row
+			and ple.against_voucher_type == "Employee Advance"
+			and self.filters.handle_employee_advances
+		):
+			_d = self.build_voucher_dict(ple)
+			_d.voucher_type = ple.against_voucher_type
+			_d.voucher_no = ple.against_voucher_no
+			row = self.voucher_balance[key] = _d
+
 		if not row:
 			# no invoice, this is an invoice / stand-alone payment / credit note
 			if self.filters.get("ignore_accounts"):
@@ -253,9 +272,6 @@ class ReceivablePayableReport:
 				row.paid -= amount
 				row.paid_in_account_currency -= amount_in_account_currency
 
-		if ple.cost_center:
-			row.cost_center = str(ple.cost_center)
-
 	def update_sub_total_row(self, row, party):
 		total_row = self.total_row_map.get(party)
 
@@ -288,13 +304,13 @@ class ReceivablePayableReport:
 
 			must_consider = False
 			if self.filters.get("for_revaluation_journals"):
-				if (abs(row.outstanding) > 0.0 / 10**self.currency_precision) or (
-					abs(row.outstanding_in_account_currency) > 0.0 / 10**self.currency_precision
+				if (abs(row.outstanding) >= 1.0 / 10**self.currency_precision) or (
+					abs(row.outstanding_in_account_currency) >= 1.0 / 10**self.currency_precision
 				):
 					must_consider = True
 			else:
-				if (abs(row.outstanding) > 1.0 / 10**self.currency_precision) and (
-					(abs(row.outstanding_in_account_currency) > 1.0 / 10**self.currency_precision)
+				if (abs(row.outstanding) >= 1.0 / 10**self.currency_precision) and (
+					(abs(row.outstanding_in_account_currency) >= 1.0 / 10**self.currency_precision)
 					or (row.voucher_no in self.err_journals)
 				):
 					must_consider = True
@@ -483,7 +499,8 @@ class ReceivablePayableReport:
 			from `tab{row.voucher_type}` si, `tabPayment Schedule` ps
 			where
 				si.name = ps.parent and
-				si.name = %s
+				si.name = %s and
+				si.is_return = 0
 			order by ps.paid_amount desc, due_date
 		""",
 			row.voucher_no,
@@ -511,9 +528,7 @@ class ReceivablePayableReport:
 			self.append_payment_term(row, d, term)
 
 	def append_payment_term(self, row, d, term):
-		if (
-			self.filters.get("customer") or self.filters.get("supplier")
-		) and d.currency == d.party_account_currency:
+		if d.currency == d.party_account_currency:
 			invoiced = d.payment_amount
 		else:
 			invoiced = d.base_payment_amount
@@ -986,22 +1001,29 @@ class ReceivablePayableReport:
 
 	def get_columns(self):
 		self.columns = []
-		self.add_column("Posting Date", fieldtype="Date")
+		self.add_column(_("Posting Date"), fieldname="posting_date", fieldtype="Date")
 		self.add_column(
-			label="Party Type",
+			label=_("Party Type"),
 			fieldname="party_type",
 			fieldtype="Data",
 			width=100,
 		)
 		self.add_column(
-			label="Party",
+			label=_("Party"),
 			fieldname="party",
 			fieldtype="Dynamic Link",
 			options="party_type",
 			width=180,
 		)
+		if self.account_type == "Receivable":
+			label = _("Receivable Account")
+		elif self.account_type == "Payable":
+			label = _("Payable Account")
+		else:
+			label = _("Party Account")
+
 		self.add_column(
-			label=self.account_type + " Account",
+			label=label,
 			fieldname="party_account",
 			fieldtype="Link",
 			options="Account",
@@ -1010,10 +1032,10 @@ class ReceivablePayableReport:
 
 		if self.party_naming_by == "Naming Series":
 			if self.account_type == "Payable":
-				label = "Supplier Name"
+				label = _("Supplier Name")
 				fieldname = "supplier_name"
 			else:
-				label = "Customer Name"
+				label = _("Customer Name")
 				fieldname = "customer_name"
 			self.add_column(
 				label=label,
@@ -1039,7 +1061,7 @@ class ReceivablePayableReport:
 			width=180,
 		)
 
-		self.add_column(label="Due Date", fieldtype="Date")
+		self.add_column(label=_("Due Date"), fieldname="due_date", fieldtype="Date")
 
 		if self.account_type == "Payable":
 			self.add_column(label=_("Bill No"), fieldname="bill_no", fieldtype="Data")

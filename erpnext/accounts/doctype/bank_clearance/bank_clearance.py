@@ -6,7 +6,7 @@ import frappe
 from frappe import _, msgprint
 from frappe.model.document import Document
 from frappe.query_builder.custom import ConstantColumn
-from frappe.utils import flt, fmt_money, getdate
+from frappe.utils import flt, fmt_money, get_link_to_form, getdate
 
 import erpnext
 
@@ -55,7 +55,7 @@ class BankClearance(Document):
 				"Payment Entry" as payment_document, name as payment_entry,
 				reference_no as cheque_number, reference_date as cheque_date,
 				if(paid_from=%(account)s, paid_amount + total_taxes_and_charges, 0) as credit,
-				if(paid_from=%(account)s, 0, received_amount) as debit,
+				if(paid_from=%(account)s, 0, received_amount + total_taxes_and_charges) as debit,
 				posting_date, ifnull(party,if(paid_from=%(account)s,paid_to,paid_from)) as against_account, clearance_date,
 				if(paid_to=%(account)s, paid_to_account_currency, paid_from_account_currency) as account_currency
 			from `tabPayment Entry`
@@ -210,8 +210,11 @@ class BankClearance(Document):
 
 				if d.cheque_date and getdate(d.clearance_date) < getdate(d.cheque_date):
 					frappe.throw(
-						_("Row #{0}: Clearance date {1} cannot be before Cheque Date {2}").format(
-							d.idx, d.clearance_date, d.cheque_date
+						_("Row #{0}: For {1} Clearance date {2} cannot be before Cheque Date {3}").format(
+							d.idx,
+							get_link_to_form(d.payment_document, d.payment_entry),
+							d.clearance_date,
+							d.cheque_date,
 						)
 					)
 

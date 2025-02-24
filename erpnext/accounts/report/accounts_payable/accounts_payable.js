@@ -111,6 +111,7 @@ frappe.query_reports["Accounts Payable"] = {
 			fieldname: "party",
 			label: __("Party"),
 			fieldtype: "MultiSelectList",
+			options: "party_type",
 			get_data: function (txt) {
 				if (!frappe.query_report.filters) return;
 
@@ -160,6 +161,11 @@ frappe.query_reports["Accounts Payable"] = {
 		{
 			fieldname: "ignore_accounts",
 			label: __("Group by Voucher"),
+			fieldtype: "Check",
+		},
+		{
+			fieldname: "handle_employee_advances",
+			label: __("Handle Employee Advances"),
 			fieldtype: "Check",
 		},
 	],

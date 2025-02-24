@@ -29,6 +29,12 @@ from erpnext.accounts.utils import get_fiscal_year
 from erpnext.exceptions import InvalidAccountCurrency, PartyDisabled, PartyFrozen
 from erpnext.utilities.regional import temporary_flag
 
+try:
+	from frappe.contacts.doctype.address.address import render_address as _render_address
+except ImportError:
+	# Older frappe versions where this function is not available
+	from frappe.contacts.doctype.address.address import get_address_display as _render_address
+
 PURCHASE_TRANSACTION_TYPES = {
 	"Supplier Quotation",
 	"Purchase Order",
@@ -68,7 +74,7 @@ def get_party_details(
 	pos_profile=None,
 ):
 	if not party:
-		return {}
+		return frappe._dict()
 	if not frappe.db.exists(party_type, party):
 		frappe.throw(_("{0}: {1} does not exists").format(party_type, party))
 	return _get_party_details(
@@ -985,10 +991,4 @@ def add_party_account(party_type, party, company, account):
 
 
 def render_address(address, check_permissions=True):
-	try:
-		from frappe.contacts.doctype.address.address import render_address as _render
-	except ImportError:
-		# Older frappe versions where this function is not available
-		from frappe.contacts.doctype.address.address import get_address_display as _render
-
-	return frappe.call(_render, address, check_permissions=check_permissions)
+	return frappe.call(_render_address, address, check_permissions=check_permissions)

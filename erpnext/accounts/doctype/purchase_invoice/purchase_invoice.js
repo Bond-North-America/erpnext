@@ -25,6 +25,13 @@ erpnext.accounts.PurchaseInvoice = class PurchaseInvoice extends erpnext.buying.
 				}
 			};
 		});
+
+		this.frm.set_query("expense_account", "items", function () {
+			return {
+				query: "erpnext.controllers.queries.get_expense_account",
+				filters: { company: doc.company },
+			};
+		});
 	}
 
 	onload() {
@@ -57,25 +64,6 @@ erpnext.accounts.PurchaseInvoice = class PurchaseInvoice extends erpnext.buying.
 
 		if(doc.update_stock==1 && doc.docstatus==1) {
 			this.show_stock_ledger();
-		}
-
-		if (this.frm.doc.repost_required && this.frm.doc.docstatus===1) {
-			this.frm.set_intro(__("Accounting entries for this invoice need to be reposted. Please click on 'Repost' button to update."));
-			this.frm.add_custom_button(__('Repost Accounting Entries'),
-				() => {
-					this.frm.call({
-						doc: this.frm.doc,
-						method: 'repost_accounting_entries',
-						freeze: true,
-						freeze_message: __('Reposting...'),
-						callback: (r) => {
-							if (!r.exc) {
-								frappe.msgprint(__('Accounting Entries are reposted.'));
-								me.frm.refresh();
-							}
-						}
-					});
-				}).removeClass('btn-default').addClass('btn-warning');
 		}
 
 		if(!doc.is_return && doc.docstatus == 1 && doc.outstanding_amount != 0){
@@ -314,7 +302,11 @@ erpnext.accounts.PurchaseInvoice = class PurchaseInvoice extends erpnext.buying.
 
 		if (this.frm.doc.__onload && this.frm.doc.__onload.load_after_mapping) return;
 
-		erpnext.utils.get_party_details(this.frm, "erpnext.accounts.party.get_party_details",
+		let payment_terms_template = this.frm.doc.payment_terms_template;
+
+		erpnext.utils.get_party_details(
+			this.frm,
+			"erpnext.accounts.party.get_party_details",
 			{
 				posting_date: this.frm.doc.posting_date,
 				bill_date: this.frm.doc.bill_date,
@@ -322,14 +314,24 @@ erpnext.accounts.PurchaseInvoice = class PurchaseInvoice extends erpnext.buying.
 				party_type: "Supplier",
 				account: this.frm.doc.credit_to,
 				price_list: this.frm.doc.buying_price_list,
-				fetch_payment_terms_template: cint(!this.frm.doc.ignore_default_payment_terms_template)
-			}, function() {
+				fetch_payment_terms_template: cint(
+					(this.frm.doc.is_return == 0) & !this.frm.doc.ignore_default_payment_terms_template
+				),
+			},
+			function () {
 				me.apply_pricing_rule();
 				me.frm.doc.apply_tds = me.frm.supplier_tds ? 1 : 0;
 				me.frm.doc.tax_withholding_category = me.frm.supplier_tds;
 				me.frm.set_df_property("apply_tds", "read_only", me.frm.supplier_tds ? 0 : 1);
 				me.frm.set_df_property("tax_withholding_category", "hidden", me.frm.supplier_tds ? 0 : 1);
-			})
+
+				// while duplicating, don't change payment terms
+				if (me.frm.doc.__run_link_triggers === false) {
+					me.frm.set_value("payment_terms_template", payment_terms_template);
+					me.frm.refresh_field("payment_terms_template");
+				}
+			}
+		);
 	}
 
 	apply_tds(frm) {
@@ -375,6 +377,8 @@ erpnext.accounts.PurchaseInvoice = class PurchaseInvoice extends erpnext.buying.
 		hide_fields(this.frm.doc);
 		if(cint(this.frm.doc.is_paid)) {
 			this.frm.set_value("allocate_advances_automatically", 0);
+			this.frm.set_value("payment_terms_template", "");
+			this.frm.set_value("payment_schedule", []);
 			if(!this.frm.doc.company) {
 				this.frm.set_value("is_paid", 0)
 				frappe.msgprint(__("Please specify Company to proceed"));
@@ -487,13 +491,6 @@ cur_frm.fields_dict['select_print_heading'].get_query = function(doc, cdt, cdn) 
 		]
 	}
 }
-
-cur_frm.set_query("expense_account", "items", function(doc) {
-	return {
-		query: "erpnext.controllers.queries.get_expense_account",
-		filters: {'company': doc.company }
-	}
-});
 
 cur_frm.set_query("wip_composite_asset", "items", function() {
 	return {

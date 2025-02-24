@@ -43,7 +43,7 @@ function get_filters() {
 			label: __("From Fiscal Year"),
 			fieldtype: "Link",
 			options: "Fiscal Year",
-			default: frappe.sys_defaults.fiscal_year,
+			default: erpnext.utils.get_fiscal_year(frappe.datetime.get_today()),
 			reqd: 1,
 		},
 		{
@@ -51,7 +51,7 @@ function get_filters() {
 			label: __("To Fiscal Year"),
 			fieldtype: "Link",
 			options: "Fiscal Year",
-			default: frappe.sys_defaults.fiscal_year,
+			default: erpnext.utils.get_fiscal_year(frappe.datetime.get_today()),
 			reqd: 1,
 		},
 		{
@@ -91,6 +91,7 @@ function get_filters() {
 			fieldname: "budget_against_filter",
 			label: __("Dimension Filter"),
 			fieldtype: "MultiSelectList",
+			options: "budget_against",
 			get_data: function (txt) {
 				if (!frappe.query_report.filters) return;
 
