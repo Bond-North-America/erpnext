@@ -458,5 +458,5 @@ def check_for_running_deletion_job(doc, method=None):
 	df = qb.DocType("DocField")
 	if qb.from_(df).select(df.parent).where((df.fieldname == "company") & (df.parent == doc.doctype)).run():
 		is_deletion_doc_running(
-			doc.company, _("Cannot make any transactions until the deletion job is completed")
+			doc.get("company"), _("Cannot make any transactions until the deletion job is completed")
 		)
