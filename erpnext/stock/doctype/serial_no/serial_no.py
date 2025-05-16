@@ -209,7 +209,7 @@ class SerialNo(StockController):
 					OR serial_no like %s
 				)
 			ORDER BY
-				posting_date desc, posting_time desc, creation desc""",
+				posting_datetime desc, creation desc""",
 			(
 				self.item_code,
 				self.company,
@@ -279,7 +279,14 @@ def validate_serial_no(sle, item_det):
 					_("Serial No {0} quantity {1} cannot be a fraction").format(sle.item_code, sle.actual_qty)
 				)
 
-			if len(serial_nos) and len(serial_nos) != abs(cint(sle.actual_qty)):
+			if (
+				(
+					(sle.voucher_type == "Stock Reconciliation" and sle.actual_qty > 0)
+					or sle.voucher_type != "Stock Reconciliation"
+				)
+				and len(serial_nos)
+				and len(serial_nos) != abs(cint(sle.actual_qty))
+			):
 				frappe.throw(
 					_("{0} Serial Numbers required for Item {1}. You have provided {2}.").format(
 						abs(sle.actual_qty), sle.item_code, len(serial_nos)

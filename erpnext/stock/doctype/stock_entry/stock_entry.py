@@ -6,10 +6,20 @@ import json
 from collections import defaultdict
 
 import frappe
-from frappe import _
+from frappe import _, bold
 from frappe.model.mapper import get_mapped_doc
 from frappe.query_builder.functions import Sum
-from frappe.utils import cint, comma_or, cstr, flt, format_time, formatdate, getdate, nowdate
+from frappe.utils import (
+	cint,
+	comma_or,
+	cstr,
+	flt,
+	format_time,
+	formatdate,
+	get_link_to_form,
+	getdate,
+	nowdate,
+)
 
 import erpnext
 from erpnext.accounts.general_ledger import process_gl_map
@@ -430,15 +440,35 @@ class StockEntry(StockController):
 					).format(frappe.bold(self.company))
 				)
 
-			elif (
-				self.is_opening == "Yes"
-				and frappe.db.get_value("Account", d.expense_account, "report_type") == "Profit and Loss"
-			):
+			acc_details = frappe.get_cached_value(
+				"Account",
+				d.expense_account,
+				["account_type", "report_type"],
+				as_dict=True,
+			)
+
+			if self.is_opening == "Yes" and acc_details.report_type == "Profit and Loss":
 				frappe.throw(
 					_(
-						"Difference Account must be a Asset/Liability type account, since this Stock Entry is an Opening Entry"
+						"Difference Account must be a Asset/Liability type account (Temporary Opening), since this Stock Entry is an Opening Entry"
 					),
 					OpeningEntryAccountError,
+				)
+
+			if acc_details.account_type == "Stock":
+				frappe.throw(
+					_(
+						"At row {0}: the Difference Account must not be a Stock type account, please change the Account Type for the account {1} or select a different account"
+					).format(d.idx, get_link_to_form("Account", d.expense_account)),
+					OpeningEntryAccountError,
+				)
+
+			if self.purpose != "Material Issue" and acc_details.account_type == "Cost of Goods Sold":
+				frappe.msgprint(
+					_(
+						"At row {0}: You have selected the Difference Account {1}, which is a Cost of Goods Sold type account. Please select a different account"
+					).format(d.idx, bold(get_link_to_form("Account", d.expense_account))),
+					title=_("Warning : Cost of Goods Sold Account"),
 				)
 
 	def validate_warehouse(self):
@@ -1314,17 +1344,38 @@ class StockEntry(StockController):
 
 	@frappe.whitelist()
 	def get_item_details(self, args=None, for_update=False):
-		item = frappe.db.sql(
-			"""select i.name, i.stock_uom, i.description, i.image, i.item_name, i.item_group,
-				i.has_batch_no, i.sample_quantity, i.has_serial_no, i.allow_alternative_item,
-				id.expense_account, id.buying_cost_center
-			from `tabItem` i LEFT JOIN `tabItem Default` id ON i.name=id.parent and id.company=%s
-			where i.name=%s
-				and i.disabled=0
-				and (i.end_of_life is null or i.end_of_life<'1900-01-01' or i.end_of_life > %s)""",
-			(self.company, args.get("item_code"), nowdate()),
-			as_dict=1,
+		item = frappe.qb.DocType("Item")
+		item_default = frappe.qb.DocType("Item Default")
+
+		query = (
+			frappe.qb.from_(item)
+			.left_join(item_default)
+			.on((item.name == item_default.parent) & (item_default.company == self.company))
+			.select(
+				item.name,
+				item.stock_uom,
+				item.description,
+				item.image,
+				item.item_name,
+				item.item_group,
+				item.has_batch_no,
+				item.sample_quantity,
+				item.has_serial_no,
+				item.allow_alternative_item,
+				item_default.expense_account,
+				item_default.buying_cost_center,
+			)
+			.where(
+				(item.name == args.get("item_code"))
+				& (item.disabled == 0)
+				& (
+					(item.end_of_life.isnull())
+					| (item.end_of_life < "1900-01-01")
+					| (item.end_of_life > nowdate())
+				)
+			)
 		)
+		item = query.run(as_dict=True)
 
 		if not item:
 			frappe.throw(
@@ -1368,6 +1419,11 @@ class StockEntry(StockController):
 
 		if self.purpose == "Material Issue":
 			ret["expense_account"] = item.get("expense_account") or item_group_defaults.get("expense_account")
+
+		if self.purpose == "Manufacture":
+			ret["expense_account"] = frappe.get_cached_value(
+				"Company", self.company, "stock_adjustment_account"
+			)
 
 		for company_field, field in {
 			"stock_adjustment_account": "expense_account",
