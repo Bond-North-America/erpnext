@@ -865,6 +865,28 @@ class TestDeliveryNote(FrappeTestCase):
 		self.assertEqual(dn.per_billed, 100)
 		self.assertEqual(dn.status, "Completed")
 
+	def test_dn_billing_status_case5(self):
+		# SO -> SI(with update stock partial invoice)
+		# SO -> DN
+		from erpnext.selling.doctype.sales_order.sales_order import make_delivery_note, make_sales_invoice
+
+		so = make_sales_order(po_no="12345")
+
+		si = make_sales_invoice(so.name)
+		si.get("items")[0].qty = 5
+		si.update_stock = 1
+		si.submit()
+
+		# Testing if Customer's Purchase Order No was rightly copied
+		self.assertEqual(so.po_no, si.po_no)
+
+		dn = make_delivery_note(so.name)
+		dn.submit()
+
+		self.assertEqual(dn.get("items")[0].billed_amt, 0)
+		self.assertEqual(dn.per_billed, 0)
+		self.assertEqual(dn.status, "To Bill")
+
 	def test_delivery_trip(self):
 		dn = create_delivery_note()
 		dt = make_delivery_trip(dn.name)
@@ -1448,6 +1470,46 @@ class TestDeliveryNote(FrappeTestCase):
 
 		self.assertEqual(so.items[0].rate, rate)
 		self.assertEqual(dn.items[0].rate, so.items[0].rate)
+
+	def test_batch_return_dn(self):
+		from erpnext.stock.doctype.delivery_note.delivery_note import make_sales_return
+
+		item_code = make_item(
+			"Test Batch Return DN Item 1",
+			properties={
+				"has_batch_no": 1,
+				"valuation_method": "Moving Average",
+				"create_new_batch": 1,
+				"batch_number_series": "TBRDN1-.#####",
+				"is_stock_item": 1,
+			},
+		).name
+
+		se = make_stock_entry(item_code=item_code, target="_Test Warehouse - _TC", qty=5, basic_rate=100)
+
+		batch_no = se.items[0].batch_no
+		dn = create_delivery_note(
+			item_code=item_code,
+			qty=5,
+			rate=500,
+			batch_no=batch_no,
+		)
+
+		dn_return = make_sales_return(dn.name)
+		dn_return.save().submit()
+
+		self.assertEqual(dn_return.items[0].qty, 5 * -1)
+
+		returned_batch_no = dn_return.items[0].batch_no
+		self.assertEqual(batch_no, returned_batch_no)
+
+		stock_value_difference = frappe.db.get_value(
+			"Stock Ledger Entry",
+			{"voucher_no": dn_return.name, "voucher_type": "Delivery Note"},
+			"stock_value_difference",
+		)
+
+		self.assertEqual(stock_value_difference, 100.0 * 5)
 
 
 def create_delivery_note(**args):

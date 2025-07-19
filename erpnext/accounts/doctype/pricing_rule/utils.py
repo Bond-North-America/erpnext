@@ -485,7 +485,7 @@ def get_qty_and_rate_for_other_item(doc, pr_doc, pricing_rules, row_item):
 				continue
 
 			stock_qty = row.get("qty") * (row.get("conversion_factor") or 1.0)
-			amount = stock_qty * (row.get("price_list_rate") or row.get("rate"))
+			amount = stock_qty * (flt(row.get("price_list_rate")) or flt(row.get("rate")))
 			pricing_rules = filter_pricing_rules_for_qty_amount(stock_qty, amount, pricing_rules, row)
 
 			if pricing_rules and pricing_rules[0]:
@@ -642,7 +642,10 @@ def get_product_discount_rule(pricing_rule, item_details, args=None, doc=None):
 		if transaction_qty:
 			qty = flt(transaction_qty) * qty / pricing_rule.recurse_for
 			if pricing_rule.round_free_qty:
-				qty = math.floor(qty)
+				qty = (flt(transaction_qty) // pricing_rule.recurse_for) * (pricing_rule.free_qty or 1)
+
+	if not qty:
+		return
 
 	free_item_data_args = {
 		"item_code": free_item,
@@ -688,7 +691,10 @@ def apply_pricing_rule_for_free_items(doc, pricing_rule_args):
 				args.pop((item.item_code, item.pricing_rules))
 
 		for free_item in args.values():
-			doc.append("items", free_item)
+			if doc.is_new() or not frappe.get_value(
+				"Pricing Rule", free_item["pricing_rules"], "dont_enforce_free_item_qty"
+			):
+				doc.append("items", free_item)
 
 
 def get_pricing_rule_items(pr_doc, other_items=False) -> list:
@@ -712,14 +718,11 @@ def get_pricing_rule_items(pr_doc, other_items=False) -> list:
 
 def validate_coupon_code(coupon_name):
 	coupon = frappe.get_doc("Coupon Code", coupon_name)
-
-	if coupon.valid_from:
-		if coupon.valid_from > getdate(today()):
-			frappe.throw(_("Sorry, this coupon code's validity has not started"))
-	elif coupon.valid_upto:
-		if coupon.valid_upto < getdate(today()):
-			frappe.throw(_("Sorry, this coupon code's validity has expired"))
-	elif coupon.used >= coupon.maximum_use:
+	if coupon.valid_from and coupon.valid_from > getdate(today()):
+		frappe.throw(_("Sorry, this coupon code's validity has not started"))
+	elif coupon.valid_upto and coupon.valid_upto < getdate(today()):
+		frappe.throw(_("Sorry, this coupon code's validity has expired"))
+	elif coupon.maximum_use and coupon.used >= coupon.maximum_use:
 		frappe.throw(_("Sorry, this coupon code is no longer valid"))
 
 

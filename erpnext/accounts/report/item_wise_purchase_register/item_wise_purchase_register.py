@@ -11,7 +11,7 @@ import erpnext
 from erpnext.accounts.report.item_wise_sales_register.item_wise_sales_register import (
 	add_sub_total_row,
 	add_total_row,
-	apply_group_by_conditions,
+	apply_order_by_conditions,
 	get_grand_total,
 	get_group_by_and_display_fields,
 	get_tax_accounts,
@@ -289,7 +289,7 @@ def get_columns(additional_table_columns, filters):
 
 
 def apply_conditions(query, pi, pii, filters):
-	for opts in ("company", "supplier", "item_code", "mode_of_payment"):
+	for opts in ("company", "supplier", "mode_of_payment"):
 		if filters.get(opts):
 			query = query.where(pi[opts] == filters[opts])
 
@@ -299,21 +299,19 @@ def apply_conditions(query, pi, pii, filters):
 	if filters.get("to_date"):
 		query = query.where(pi.posting_date <= filters.get("to_date"))
 
+	if filters.get("item_code"):
+		query = query.where(pii.item_code == filters.get("item_code"))
+
 	if filters.get("item_group"):
 		query = query.where(pii.item_group == filters.get("item_group"))
-
-	if not filters.get("group_by"):
-		query = query.orderby(pi.posting_date, order=Order.desc)
-		query = query.orderby(pii.item_group, order=Order.desc)
-	else:
-		query = apply_group_by_conditions(filters, "Purchase Invoice")
 
 	return query
 
 
 def get_items(filters, additional_table_columns):
-	pi = frappe.qb.DocType("Purchase Invoice")
-	pii = frappe.qb.DocType("Purchase Invoice Item")
+	doctype = "Purchase Invoice"
+	pi = frappe.qb.DocType(doctype)
+	pii = frappe.qb.DocType(f"{doctype} Item")
 	Item = frappe.qb.DocType("Item")
 	query = (
 		frappe.qb.from_(pi)
@@ -322,7 +320,7 @@ def get_items(filters, additional_table_columns):
 		.left_join(Item)
 		.on(pii.item_code == Item.name)
 		.select(
-			pii.name.as_("pii_name"),
+			pii.name,
 			pii.parent,
 			pi.posting_date,
 			pi.credit_to,
@@ -350,6 +348,7 @@ def get_items(filters, additional_table_columns):
 			pi.mode_of_payment,
 		)
 		.where(pi.docstatus == 1)
+		.where(pii.parenttype == doctype)
 	)
 
 	if filters.get("supplier"):
@@ -367,7 +366,17 @@ def get_items(filters, additional_table_columns):
 
 	query = apply_conditions(query, pi, pii, filters)
 
-	return query.run(as_dict=True)
+	from frappe.desk.reportview import build_match_conditions
+
+	query, params = query.walk()
+	match_conditions = build_match_conditions(doctype)
+
+	if match_conditions:
+		query += " and " + match_conditions
+
+	query = apply_order_by_conditions(query, pi, pii, filters)
+
+	return frappe.db.sql(query, params, as_dict=True)
 
 
 def get_aii_accounts():

@@ -28,7 +28,7 @@ frappe.ui.form.on("Payment Request", "refresh", function (frm) {
 	if (
 		frm.doc.payment_request_type == "Inward" &&
 		frm.doc.payment_channel !== "Phone" &&
-		!in_list(["Initiated", "Paid"], frm.doc.status) &&
+		!["Initiated", "Paid"].includes(frm.doc.status) &&
 		!frm.doc.__islocal &&
 		frm.doc.docstatus == 1
 	) {
@@ -48,8 +48,8 @@ frappe.ui.form.on("Payment Request", "refresh", function (frm) {
 	}
 
 	if (
-		(!frm.doc.payment_gateway_account || frm.doc.payment_request_type == "Outward") &&
-		frm.doc.status == "Initiated"
+		frm.doc.payment_request_type == "Outward" &&
+		["Initiated", "Partially Paid"].includes(frm.doc.status)
 	) {
 		frm.add_custom_button(__("Create Payment Entry"), function () {
 			frappe.call({

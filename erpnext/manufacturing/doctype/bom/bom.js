@@ -364,7 +364,7 @@ frappe.ui.form.on("BOM", {
 			dialog.fields_dict.items.df.data.push({
 				item_code: d.item_code,
 				variant_item_code: "",
-				qty: d.qty,
+				qty: (d.qty / frm.doc.quantity) * (dialog.fields_dict.qty.value || 1),
 				source_warehouse: d.source_warehouse,
 				operation: d.operation,
 			});
@@ -400,7 +400,7 @@ frappe.ui.form.on("BOM", {
 	},
 
 	rm_cost_as_per(frm) {
-		if (in_list(["Valuation Rate", "Last Purchase Rate"], frm.doc.rm_cost_as_per)) {
+		if (["Valuation Rate", "Last Purchase Rate"].includes(frm.doc.rm_cost_as_per)) {
 			frm.set_value("plc_conversion_rate", 1.0);
 		}
 	},

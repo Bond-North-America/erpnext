@@ -162,7 +162,7 @@ def make_taxes_and_charges_template(company_name, doctype, template):
 	doc.flags.ignore_links = True
 	doc.flags.ignore_validate = True
 	doc.flags.ignore_mandatory = True
-	doc.insert(ignore_permissions=True)
+	doc.insert(ignore_permissions=True, ignore_if_duplicate=True)
 	return doc
 
 
@@ -195,7 +195,7 @@ def make_item_tax_template(company_name, template):
 	# Ingone validations to make doctypes faster
 	doc.flags.ignore_links = True
 	doc.flags.ignore_validate = True
-	doc.insert(ignore_permissions=True)
+	doc.insert(ignore_permissions=True, ignore_if_duplicate=True)
 	return doc
 
 
@@ -207,13 +207,12 @@ def get_or_create_account(company_name, account):
 	default_root_type = "Liability"
 	root_type = account.get("root_type", default_root_type)
 
+	or_filters = {"account_name": account.get("account_name")}
+	if account.get("account_number"):
+		or_filters.update({"account_number": account.get("account_number")})
+
 	existing_accounts = frappe.get_all(
-		"Account",
-		filters={"company": company_name, "root_type": root_type},
-		or_filters={
-			"account_name": account.get("account_name"),
-			"account_number": account.get("account_number"),
-		},
+		"Account", filters={"company": company_name, "root_type": root_type}, or_filters=or_filters
 	)
 
 	if existing_accounts:
@@ -232,7 +231,7 @@ def get_or_create_account(company_name, account):
 	doc = frappe.get_doc(account)
 	doc.flags.ignore_links = True
 	doc.flags.ignore_validate = True
-	doc.insert(ignore_permissions=True, ignore_mandatory=True)
+	doc.insert(ignore_permissions=True, ignore_mandatory=True, ignore_if_duplicate=True)
 	return doc
 
 

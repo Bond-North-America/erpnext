@@ -14,9 +14,15 @@ from erpnext.stock.doctype.item.item import get_last_purchase_details, validate_
 def update_last_purchase_rate(doc, is_submit) -> None:
 	"""updates last_purchase_rate in item table for each item"""
 
+	if doc.get("is_internal_supplier"):
+		return
+
 	this_purchase_date = getdate(doc.get("posting_date") or doc.get("transaction_date"))
 
 	for d in doc.get("items"):
+		if d.get("is_free_item"):
+			continue
+
 		# get last purchase details
 		last_purchase_details = get_last_purchase_details(d.item_code, doc.name)
 

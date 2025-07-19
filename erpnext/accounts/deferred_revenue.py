@@ -58,7 +58,7 @@ def build_conditions(process_type, account, company):
 	)
 
 	if account:
-		conditions += f"AND {deferred_account}='{account}'"
+		conditions += f"AND {deferred_account}={frappe.db.escape(account)}"
 	elif company:
 		conditions += f"AND p.company = {frappe.db.escape(company)}"
 
@@ -360,45 +360,45 @@ def book_deferred_income_or_expense(doc, deferred_process, posting_date=None):
 			)
 
 		if not amount:
-			return
-
-		gl_posting_date = end_date
-		prev_posting_date = None
-		# check if books nor frozen till endate:
-		if accounts_frozen_upto and getdate(end_date) <= getdate(accounts_frozen_upto):
-			gl_posting_date = get_last_day(add_days(accounts_frozen_upto, 1))
 			prev_posting_date = end_date
-
-		if via_journal_entry:
-			book_revenue_via_journal_entry(
-				doc,
-				credit_account,
-				debit_account,
-				amount,
-				base_amount,
-				gl_posting_date,
-				project,
-				account_currency,
-				item.cost_center,
-				item,
-				deferred_process,
-				submit_journal_entry,
-			)
 		else:
-			make_gl_entries(
-				doc,
-				credit_account,
-				debit_account,
-				against,
-				amount,
-				base_amount,
-				gl_posting_date,
-				project,
-				account_currency,
-				item.cost_center,
-				item,
-				deferred_process,
-			)
+			gl_posting_date = end_date
+			prev_posting_date = None
+			# check if books nor frozen till endate:
+			if accounts_frozen_upto and getdate(end_date) <= getdate(accounts_frozen_upto):
+				gl_posting_date = get_last_day(add_days(accounts_frozen_upto, 1))
+				prev_posting_date = end_date
+
+			if via_journal_entry:
+				book_revenue_via_journal_entry(
+					doc,
+					credit_account,
+					debit_account,
+					amount,
+					base_amount,
+					gl_posting_date,
+					project,
+					account_currency,
+					item.cost_center,
+					item,
+					deferred_process,
+					submit_journal_entry,
+				)
+			else:
+				make_gl_entries(
+					doc,
+					credit_account,
+					debit_account,
+					against,
+					amount,
+					base_amount,
+					gl_posting_date,
+					project,
+					account_currency,
+					item.cost_center,
+					item,
+					deferred_process,
+				)
 
 		# Returned in case of any errors because it tries to submit the same record again and again in case of errors
 		if frappe.flags.deferred_accounting_error:

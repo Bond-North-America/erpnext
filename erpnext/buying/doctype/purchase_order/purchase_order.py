@@ -345,7 +345,13 @@ class PurchaseOrder(BuyingController):
 		update_linked_doc(self.doctype, self.name, self.inter_company_order_reference)
 
 	def on_cancel(self):
-		self.ignore_linked_doctypes = ("GL Entry", "Payment Ledger Entry")
+		self.ignore_linked_doctypes = (
+			"GL Entry",
+			"Payment Ledger Entry",
+			"Unreconcile Payment",
+			"Unreconcile Payment Entries",
+		)
+
 		super().on_cancel()
 
 		if self.is_against_so():
@@ -450,9 +456,11 @@ class PurchaseOrder(BuyingController):
 		if not self.is_against_so():
 			return
 		for item in removed_items:
-			prev_ordered_qty = frappe.get_cached_value(
-				"Sales Order Item", item.get("sales_order_item"), "ordered_qty"
+			prev_ordered_qty = (
+				frappe.get_cached_value("Sales Order Item", item.get("sales_order_item"), "ordered_qty")
+				or 0.0
 			)
+
 			frappe.db.set_value(
 				"Sales Order Item", item.get("sales_order_item"), "ordered_qty", prev_ordered_qty - item.qty
 			)

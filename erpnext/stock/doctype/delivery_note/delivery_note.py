@@ -211,52 +211,33 @@ class DeliveryNote(SellingController):
 		self.validate_sales_invoice_references()
 
 	def validate_sales_order_references(self):
-		err_msg = ""
-		for item in self.items:
-			if (item.against_sales_order and not item.so_detail) or (
-				not item.against_sales_order and item.so_detail
-			):
-				if not item.against_sales_order:
-					err_msg += (
-						_("'Sales Order' reference ({1}) is missing in row {0}").format(
-							frappe.bold(item.idx), frappe.bold("against_sales_order")
-						)
-						+ "<br>"
-					)
-				else:
-					err_msg += (
-						_("'Sales Order Item' reference ({1}) is missing in row {0}").format(
-							frappe.bold(item.idx), frappe.bold("so_detail")
-						)
-						+ "<br>"
-					)
-
-		if err_msg:
-			frappe.throw(err_msg, title=_("References to Sales Orders are Incomplete"))
+		self._validate_dependent_item_fields(
+			"against_sales_order", "so_detail", _("References to Sales Orders are Incomplete")
+		)
 
 	def validate_sales_invoice_references(self):
-		err_msg = ""
-		for item in self.items:
-			if (item.against_sales_invoice and not item.si_detail) or (
-				not item.against_sales_invoice and item.si_detail
-			):
-				if not item.against_sales_invoice:
-					err_msg += (
-						_("'Sales Invoice' reference ({1}) is missing in row {0}").format(
-							frappe.bold(item.idx), frappe.bold("against_sales_invoice")
-						)
-						+ "<br>"
-					)
-				else:
-					err_msg += (
-						_("'Sales Invoice Item' reference ({1}) is missing in row {0}").format(
-							frappe.bold(item.idx), frappe.bold("si_detail")
-						)
-						+ "<br>"
-					)
+		self._validate_dependent_item_fields(
+			"against_sales_invoice", "si_detail", _("References to Sales Invoices are Incomplete")
+		)
 
-		if err_msg:
-			frappe.throw(err_msg, title=_("References to Sales Invoices are Incomplete"))
+	def _validate_dependent_item_fields(self, field_a: str, field_b: str, error_title: str):
+		errors = []
+		for item in self.items:
+			missing_label = None
+			if item.get(field_a) and not item.get(field_b):
+				missing_label = item.meta.get_label(field_b)
+			elif item.get(field_b) and not item.get(field_a):
+				missing_label = item.meta.get_label(field_a)
+
+			if missing_label and missing_label != "No Label":
+				errors.append(
+					_("The field {0} in row {1} is not set").format(
+						frappe.bold(_(missing_label)), frappe.bold(item.idx)
+					)
+				)
+
+		if errors:
+			frappe.throw("<br>".join(errors), title=error_title)
 
 	def validate_proj_cust(self):
 		"""check for does customer belong to same project as entered.."""
@@ -510,16 +491,20 @@ def update_billed_amount_based_on_so(so_detail, update_modified=True):
 	from frappe.query_builder.functions import Sum
 
 	# Billed against Sales Order directly
+	si = frappe.qb.DocType("Sales Invoice").as_("si")
 	si_item = frappe.qb.DocType("Sales Invoice Item").as_("si_item")
 	sum_amount = Sum(si_item.amount).as_("amount")
 
 	billed_against_so = (
 		frappe.qb.from_(si_item)
+		.join(si)
+		.on(si.name == si_item.parent)
 		.select(sum_amount)
 		.where(
 			(si_item.so_detail == so_detail)
 			& ((si_item.dn_detail.isnull()) | (si_item.dn_detail == ""))
 			& (si_item.docstatus == 1)
+			& (si.update_stock == 0)
 		)
 		.run()
 	)
@@ -732,7 +717,7 @@ def make_sales_invoice(source_name, target_doc=None, args=None):
 	automatically_fetch_payment_terms = cint(
 		frappe.db.get_single_value("Accounts Settings", "automatically_fetch_payment_terms")
 	)
-	if automatically_fetch_payment_terms:
+	if automatically_fetch_payment_terms and not doc.is_return:
 		doc.set_payment_schedule()
 
 	return doc
